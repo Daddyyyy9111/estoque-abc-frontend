@@ -334,7 +334,7 @@
         }
 
         .sidebar {
-            display: none;
+            display: block; /* Always block for desktop, hidden by transform on mobile */
             width: 100%;
             padding: 1.5rem;
             background-color: #3730a3; /* Darker indigo for sidebar */
@@ -349,7 +349,6 @@
             transform: translateX(-100%); /* Hidden by default on mobile */
         }
         .sidebar.active {
-            display: block;
             transform: translateX(0); /* Slide in */
         }
         .sidebar nav ul li button {
@@ -731,13 +730,17 @@
                 <!-- Detalhes de Movimentação do Mês -->
                 <div id="monthly-movements-details-wrapper" class="hidden card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes das Movimentações do Mês</h3>
+                    <div class="mb-4">
+                        <label for="search-monthly-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
+                        <input type="text" id="search-monthly-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
+                    </div>
                     <div class="table-container">
                         <table id="table-monthly-movements-details">
                             <thead>
                                 <tr>
                                     <th data-sort-key="os_number">PEDIDO/OS</th>
                                     <th data-sort-key="cidade_destino">CIDADE</th>
-                                    <th data-sort-key="conjuntos_pedidos">CONJUNTOS PEDIDOS</th>
+                                    <th>CONJUNTOS PEDIDOS</th> <!-- Removed data-sort-key for this column -->
                                     <th data-sort-key="data_emissao">DATA</th>
                                 </tr>
                             </thead>
@@ -752,13 +755,17 @@
                 <!-- Detalhes de Movimentação da Semana -->
                 <div id="weekly-movements-details-wrapper" class="hidden card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes das Movimentações da Semana</h3>
+                    <div class="mb-4">
+                        <label for="search-weekly-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
+                        <input type="text" id="search-weekly-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
+                    </div>
                     <div class="table-container">
                         <table id="table-weekly-movements-details">
                             <thead>
                                 <tr>
                                     <th data-sort-key="os_number">PEDIDO/OS</th>
                                     <th data-sort-key="cidade_destino">CIDADE</th>
-                                    <th data-sort-key="conjuntos_pedidos">CONJUNTOS PEDIDOS</th>
+                                    <th>CONJUNTOS PEDIDOS</th> <!-- Removed data-sort-key for this column -->
                                     <th data-sort-key="data_emissao">DATA</th>
                                 </tr>
                             </thead>
@@ -1564,6 +1571,9 @@
         let currentProducaoMinimaData = [];
         let currentAuditLogData = [];
         let currentPendingOrdersData = [];
+        // Novas variáveis para os dados detalhados do dashboard
+        let currentMonthlyMovementsDetailsData = [];
+        let currentWeeklyMovementsDetailsData = [];
 
         // Variáveis para os gráficos
         let monthlyMovementsChartInstance = null;
@@ -1620,9 +1630,10 @@
                 hideLoading();
                 showToast('Logout bem-sucedido!', 'info');
             } catch (error) {
-                hideLoading();
                 console.error('Erro ao fazer logout:', error);
                 showToast('Erro ao fazer logout. Por favor, tente novamente.', 'error');
+            } finally {
+                hideLoading();
             }
         }
 
@@ -1700,7 +1711,7 @@
                 mainContent.classList.toggle('expanded');
                 // For mobile, also toggle 'open' class
                 if (window.innerWidth < 768) {
-                    sidebar.classList.toggle('open');
+                    sidebar.classList.toggle('active'); // Use active for mobile sidebar
                 }
             } else {
                 console.error('Elemento #sidebar ou #main-content-wrapper não encontrado.');
@@ -1899,6 +1910,7 @@
                 filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
             }
             else {
+                // General filter for any table
                 filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
             }
             
@@ -2409,71 +2421,25 @@
                 const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
                 const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
 
-                let monthlyMovementsCount = 0;
-                let weeklyMovementsCount = 0;
+                // Filter and store monthly/weekly movements
+                currentMonthlyMovementsDetailsData = movimentacoesData.filter(mov => {
+                    const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                    return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneMonthAgo;
+                });
+                currentWeeklyMovementsDetailsData = movimentacoesData.filter(mov => {
+                    const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                    return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneWeekAgo;
+                });
 
-                const monthlyMovementsDetailsBody = document.getElementById('table-monthly-movements-details');
-                const weeklyMovementsDetailsBody = document.getElementById('table-weekly-movements-details');
-                const noMonthlyMovementsData = document.getElementById('no-monthly-movements-data');
-                const noWeeklyMovementsData = document.getElementById('no-weekly-movements-data');
+                // Update dashboard counts
+                const monthlyMovementsElement = document.getElementById('monthly-movements');
+                if (monthlyMovementsElement) monthlyMovementsElement.textContent = currentMonthlyMovementsDetailsData.length;
+                const weeklyMovementsElement = document.getElementById('weekly-movements');
+                if (weeklyMovementsElement) weeklyMovementsElement.textContent = currentWeeklyMovementsDetailsData.length;
 
-                if (monthlyMovementsDetailsBody && monthlyMovementsDetailsBody.getElementsByTagName('tbody')[0]) {
-                    const tbodyMonthly = monthlyMovementsDetailsBody.getElementsByTagName('tbody')[0];
-                    tbodyMonthly.innerHTML = '';
-                    let hasMonthlyMovements = false;
-
-                    movimentacoesData.forEach(mov => {
-                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-
-                        if (movDate && mov.tipo === "Saída - Pedido") { 
-                            if (movDate >= oneMonthAgo) {
-                                monthlyMovementsCount++;
-                                hasMonthlyMovements = true;
-                                addRowToMovementDetailsTable(tbodyMonthly, mov);
-                            }
-                        }
-                    });
-                    const monthlyMovementsElement = document.getElementById('monthly-movements');
-                    if (monthlyMovementsElement) {
-                        monthlyMovementsElement.textContent = monthlyMovementsCount;
-                    } else {
-                        console.error('Elemento #monthly-movements não encontrado.');
-                    }
-                    if (noMonthlyMovementsData) {
-                        noMonthlyMovementsData.style.display = hasMonthlyMovements ? 'none' : 'block';
-                    }
-                } else {
-                    console.error('Elemento #table-monthly-movements-details ou seu tbody não encontrado.');
-                }
-
-                if (weeklyMovementsDetailsBody && weeklyMovementsDetailsBody.getElementsByTagName('tbody')[0]) {
-                    const tbodyWeekly = weeklyMovementsDetailsBody.getElementsByTagName('tbody')[0];
-                    tbodyWeekly.innerHTML = '';
-                    let hasWeeklyMovements = false;
-
-                    movimentacoesData.forEach(mov => {
-                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-
-                        if (movDate && mov.tipo === "Saída - Pedido") { 
-                            if (movDate >= oneWeekAgo) {
-                                weeklyMovementsCount++;
-                                hasWeeklyMovements = true;
-                                addRowToMovementDetailsTable(tbodyWeekly, mov);
-                            }
-                        }
-                    });
-                    const weeklyMovementsElement = document.getElementById('weekly-movements');
-                    if (weeklyMovementsElement) {
-                        weeklyMovementsElement.textContent = weeklyMovementsCount;
-                    } else {
-                        console.error('Elemento #weekly-movements não encontrado.');
-                    }
-                    if (noWeeklyMovementsData) {
-                        noWeeklyMovementsData.style.display = hasWeeklyMovements ? 'none' : 'block';
-                    }
-                } else {
-                    console.error('Elemento #table-weekly-movements-details ou seu tbody não encontrado.');
-                }
+                // Populate detail tables
+                populateDashboardMovementDetailsTable(currentMonthlyMovementsDetailsData, 'table-monthly-movements-details', 'no-monthly-movements-data');
+                populateDashboardMovementDetailsTable(currentWeeklyMovementsDetailsData, 'table-weekly-movements-details', 'no-weekly-movements-data');
 
                 renderMonthlyMovementsChart(movimentacoesData); 
             }
@@ -2499,29 +2465,50 @@
             }
         }
 
-        function addRowToMovementDetailsTable(tableBody, mov) {
-            const row = document.createElement('tr');
-            row.className = 'border-b border-gray-200 hover:bg-gray-100';
-            const conjuntosPedidos = mov.itens.map(item => {
-                let itemStr = `${item.quantidade}x `;
-                if (item.modelo) { 
-                    itemStr += item.modelo;
-                } else if (item.componente) { 
-                    itemStr += item.componente;
-                }
-                if (item.tampo && item.tampo !== 'N/A') {
-                    itemStr += ` (Tampo: ${item.tampo})`;
-                }
-                return itemStr;
-            }).join(', ');
+        // New function to populate dashboard movement detail tables
+        function populateDashboardMovementDetailsTable(data, tableId, noDataId) {
+            const tableBodyElement = document.getElementById(tableId);
+            const noDataElement = document.getElementById(noDataId);
+            if (!tableBodyElement || !tableBodyElement.getElementsByTagName('tbody')[0]) {
+                console.error(`Elemento #${tableId} ou seu tbody não encontrado.`);
+                return;
+            }
+            const tbody = tableBodyElement.getElementsByTagName('tbody')[0];
+            tbody.innerHTML = ''; // Clear existing rows
 
-            row.innerHTML = `
-                <td class="py-3 px-6 text-left">${mov.os_number}</td>
-                <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
-                <td class="py-3 px-6 text-left">${conjuntosPedidos}</td>
-                <td class="py-3 px-6 text-left">${mov.data_emissao ? new Date(mov.data_emissao).toLocaleDateString('pt-BR') : 'N/A'}</td>
-            `;
-            tableBody.appendChild(row);
+            if (data && data.length > 0) {
+                data.forEach(mov => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                    const conjuntosPedidos = mov.itens.map(item => {
+                        let itemStr = `${item.quantidade}x `;
+                        if (item.modelo) {
+                            itemStr += item.modelo;
+                        } else if (item.componente) {
+                            itemStr += item.componente;
+                        }
+                        if (item.tampo && item.tampo !== 'N/A') {
+                            itemStr += ` (Tampo: ${item.tampo})`;
+                        }
+                        return itemStr;
+                    }).join(', ');
+
+                    row.innerHTML = `
+                        <td class="py-3 px-6 text-left">${mov.os_number}</td>
+                        <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
+                        <td class="py-3 px-6 text-left">
+                            <button onclick="showOrderDetailsModal('${mov.os_number}', ${escape(JSON.stringify(mov.itens))}, '${mov.cidade_destino}', '${mov.data_emissao}', '${mov.prazo_entrega}')" class="text-indigo-500 hover:underline">
+                                ${conjuntosPedidos}
+                            </button>
+                        </td>
+                        <td class="py-3 px-6 text-left">${mov.data_emissao ? new Date(mov.data_emissao).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                noDataElement.style.display = 'none';
+            } else {
+                noDataElement.style.display = 'block';
+            }
         }
 
         // --- Funções de Detalhes da Movimentação (Modal) ---
@@ -3486,7 +3473,7 @@
                     if (window.innerWidth < 768) {
                         const sidebar = document.getElementById('sidebar');
                         const mainContent = document.getElementById('main-content-wrapper');
-                        sidebar.classList.remove('open');
+                        sidebar.classList.remove('active');
                         sidebar.classList.add('collapsed');
                         mainContent.classList.remove('expanded');
                     }
@@ -3498,11 +3485,11 @@
                 const sidebar = document.getElementById('sidebar');
                 const mainContent = document.getElementById('main-content-wrapper');
                 if (window.innerWidth >= 768) {
-                    sidebar.classList.remove('open'); // Garante que a classe 'open' do mobile seja removida
+                    sidebar.classList.remove('active'); // Garante que a classe 'active' do mobile seja removida
                     sidebar.classList.remove('collapsed'); // Estado padrão no desktop
                     mainContent.classList.remove('expanded');
                 } else {
-                    sidebar.classList.remove('open'); // Começa colapsada no mobile
+                    sidebar.classList.remove('active'); // Começa colapsada no mobile
                     sidebar.classList.add('collapsed');
                     mainContent.classList.remove('expanded');
                 }
@@ -3704,6 +3691,14 @@
             document.getElementById('search-pending-orders')?.addEventListener('input', () => { 
                 filterTable('search-pending-orders', currentPendingOrdersData, populatePendingOrdersTable, false, false, true);
             });
+            // New search listeners for dashboard movement details
+            document.getElementById('search-monthly-movements')?.addEventListener('input', () => {
+                filterTable('search-monthly-movements', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'));
+            });
+            document.getElementById('search-weekly-movements')?.addEventListener('input', () => {
+                filterTable('search-weekly-movements', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'));
+            });
+
 
             // Event listeners para ordenação de tabelas
             document.querySelectorAll('#table-zurich th[data-sort-key]').forEach(header => {
@@ -3741,6 +3736,14 @@
             document.querySelectorAll('#table-producao th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-producao', currentMovimentacoesData.filter(mov => mov.tipo === "Produção - Conjunto Pronto"), populateMovimentacoesTable, header.dataset.sortKey));
             });
+            // New sort listeners for dashboard movement details tables
+            document.querySelectorAll('#table-monthly-movements-details th[data-sort-key]').forEach(header => {
+                header.addEventListener('click', () => sortTable('table-monthly-movements-details', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'), header.dataset.sortKey));
+            });
+            document.querySelectorAll('#table-weekly-movements-details th[data-sort-key]').forEach(header => {
+                header.addEventListener('click', () => sortTable('table-weekly-movements-details', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'), header.dataset.sortKey));
+            });
+
 
             document.querySelectorAll('#table-audit-log th[data-sort-key]').forEach(header => { 
                 header.addEventListener('click', () => sortTable('table-audit-log', currentAuditLogData, populateAuditLogsTable, header.dataset.sortKey));
