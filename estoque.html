@@ -190,7 +190,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
         /* Modal Styles */
-        /* Removed .modal class as it was conflicting with .modal-overlay */
         .close-button {
             color: #9ca3af; /* Lighter gray for close button */
             font-size: 2rem; /* Larger close button */
@@ -873,6 +872,7 @@
 
                         <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar/Remover Itens Avulsos:</h4>
                         <div id="reajusteAvulsaItemsContainer">
+                            <!-- Itens avulsos serão adicionados aqui dinamicamente pelo JavaScript -->
                             <p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>
                         </div>
                         <button type="button" id="add-reajuste-avulsa-item-button" class="btn-secondary w-full md:w-auto mb-4">Adicionar Mais Item Avulso</button>
@@ -1374,7 +1374,7 @@
                     <p id="saidaConjuntoModeloCJA-validation" class="validation-message">Campo obrigatório.</p>
                 </div>
                 <div class="mb-4">
-                    <label for="saidaConjuntoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo (para CJA):</label>
+                    <label for="saidaConjuntoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
                     <select id="saidaConjuntoTampo" class="select-field">
                         <option value="">Selecione o Tampo</option>
                         <option value="MDF">MDF</option>
@@ -1455,26 +1455,12 @@
             firebaseUser: null // Armazena o objeto User do Firebase
         };
 
-        // --- Mapeamento de Componentes por CJA (para preenchimento dinâmico) ---
-        // Este mapa agora é apenas para referência de componentes, não para geração automática de quantidades
-        const CJA_COMPONENT_MAP = {
-            'ZURICH': {
-                'CJA-06': ['ASSENTO-ZURICH-CJA-06', 'ENCOSTO-ZURICH-CJA-06', 'PORTA-LIVRO'],
-                'CJA-05': ['ASSENTO-ZURICH-CJA-05', 'ENCOSTO-ZURICH-CJA-05', 'PORTA-LIVRO'],
-                'CJA-04': ['ASSENTO-ZURICH-CJA-04', 'ENCOSTO-ZURICH-CJA-04', 'PORTA-LIVRO'],
-                'CJA-03': ['ASSENTO-ZURICH-CJA-03', 'ENCOSTO-ZURICH-CJA-03', 'PORTA-LIVRO']
-            },
-            'MASTICMOL': {
-                'CJA-06': ['ASSENTO-MASTICMOL-CJA-06', 'ENCOSTO-MASTICMOL-CJA-06', 'PORTA-LIVRO'],
-                'CJA-05': ['ASSENTO-MASTICMOL-CJA-05', 'ENCOSTO-MASTICMOL-CJA-05', 'PORTA-LIVRO'],
-                'CJA-04': ['ASSENTO-MASTICMOL-CJA-04', 'ENCOSTO-MASTICMOL-CJA-04', 'PORTA-LIVRO'],
-                'CJA-03': ['ASSENTO-MASTICMOL-CJA-03', 'ENCOSTO-MASTICMOL-CJA-03', 'PORTA-LIVRO']
-            }
-        };
-
-        const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL'];
+        // --- Listas de Componentes e Modelos ---
         const CJA_MODELS = ['CJA-06', 'CJA-05', 'CJA-04', 'CJA-03']; 
         const CJA_TYPES = ['ZURICH', 'MASTICMOL'];
+        const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL'];
+
+        // Lista completa de todos os componentes individuais para dropdowns
         const ALL_COMPONENTS = [
             'PORTA-LIVRO',
             'ASSENTO-ZURICH-CJA-03', 'ENCOSTO-ZURICH-CJA-03',
@@ -1508,9 +1494,8 @@
         let cjaProductionChartInstance = null;
 
         // Variáveis para os itens de reajuste/saída manual
-        let reajusteConjuntoItems = {}; // Para conjuntos prontos no reajuste (se mantivermos)
         let reajusteAvulsaItems = []; // Para itens avulsos no reajuste
-        let saidaConjuntoItems = {}; // Para conjuntos prontos na saída manual
+        let saidaConjuntoItems = []; // Para conjuntos prontos na saída manual
         let saidaAvulsaItems = []; // Para itens avulsos na saída manual
 
         let confirmActionCallback = null; // Callback para o modal de confirmação
@@ -2195,9 +2180,13 @@
                     hasSaidas = true;
                     const conjuntosPedidos = mov.itens.map(item => {
                         let itemStr = `${item.quantidade}x `;
-                        itemStr += item.modelo || item.componente || 'N/A';
-                        if (item.tampo && item.tampo !== 'N/A') {
-                            itemStr += ` (Tampo: ${item.tampo})`;
+                        // Ajuste para exibir corretamente o nome do item
+                        if (item.modelo_cja && item.tampo_tipo) {
+                            itemStr += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+                        } else if (item.componente) {
+                            itemStr += item.componente;
+                        } else {
+                            itemStr += 'N/A';
                         }
                         return itemStr;
                     }).join(', ');
@@ -2218,10 +2207,7 @@
                     hasEntradas = true;
                     const itensResumo = mov.itens.map(item => {
                         let itemStr = `${item.quantidade}x `;
-                        itemStr += item.modelo || item.componente || 'N/A';
-                        if (item.tampo && item.tampo !== 'N/A') { 
-                            itemStr += ` (Tampo: ${item.tampo})`;
-                        }
+                        itemStr += item.componente || 'N/A';
                         return itemStr;
                     }).join(', ');
 
@@ -2287,40 +2273,8 @@
                     const LOW_STOCK_THRESHOLD = 300;
                     currentLowStockData = []; 
 
-                    const componentsForLowStockCheck = [
-                        'PORTA-LIVRO',
-                        'ASSENTO-ZURICH-CJA-03', 'ENCOSTO-ZURICH-CJA-03',
-                        'ASSENTO-ZURICH-CJA-04', 'ENCOSTO-ZURICH-CJA-04',
-                        'ASSENTO-ZURICH-CJA-05', 'ENCOSTO-ZURICH-CJA-05',
-                        'ASSENTO-ZURICH-CJA-06', 'ENCOSTO-ZURICH-CJA-06',
-                        'ASSENTO-MASTICMOL-CJA-03', 'ENCOSTO-MASTICMOL-CJA-03',
-                        'ASSENTO-MASTICMOL-CJA-04', 'ENCOSTO-MASTICMOL-CJA-04',
-                        'ASSENTO-MASTICMOL-CJA-05', 'ENCOSTO-MASTICMOL-CJA-05',
-                        'ASSENTO-MASTICMOL-CJA-06', 'ENCOSTO-MASTICMOL-CJA-06',
-                        'TAMPO-MDF-CJA-03', 'TAMPO-PLASTICO-CJA-03', 'TAMPO-MASTICMOL-CJA-03',
-                        'TAMPO-MDF-CJA-04', 'TAMPO-PLASTICO-CJA-04', 'TAMPO-MASTICMOL-CJA-04',
-                        'TAMPO-MDF-CJA-05', 'TAMPO-PLASTICO-CJA-05', 'TAMPO-MASTICMOL-CJA-05',
-                        'TAMPO-MDF-CJA-06', 'TAMPO-PLASTICO-CJA-06', 'TAMPO-MASTICMOL-CJA-06',
-                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-03-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-03-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-04-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-04-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-05-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-05-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-06-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-06-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-03-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-03-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-04-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-04-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-05-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-05-PLASTICO',
-                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-06-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-06-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-03-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-03-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-04-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-04-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-05-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-05-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-06-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-06-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-03-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-03-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-04-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-04-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-05-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-05-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-PLASTICO'
-                    ];
-
-
-                    componentsForLowStockCheck.forEach(componentName => {
+                    // Usar ALL_COMPONENTS para verificar estoque baixo
+                    ALL_COMPONENTS.forEach(componentName => {
                         const quantity = stockMap[componentName] || 0;
                         if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) { 
                             hasLowStock = true;
@@ -2329,6 +2283,27 @@
                         }
                     });
                     
+                    // Adicionar conjuntos prontos à verificação de estoque baixo
+                    const ALL_CONJUNTOS_PRONTOS = [];
+                    CJA_TYPES.forEach(cjaType => {
+                        CJA_MODELS.forEach(cjaModel => {
+                            TAMPO_TYPES.forEach(tampoType => {
+                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-LOCAL-${cjaType}-${cjaModel}-${tampoType}`);
+                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-DISTRITO-${cjaType}-${cjaModel}-${tampoType}`);
+                            });
+                        });
+                    });
+
+                    ALL_CONJUNTOS_PRONTOS.forEach(conjuntoName => {
+                        const quantity = stockMap[conjuntoName] || 0;
+                        if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) {
+                            hasLowStock = true;
+                            lowStockItemCount++;
+                            currentLowStockData.push({ componente: conjuntoName, quantidade: quantity });
+                        }
+                    });
+
+
                     if (lowStockCountElement) {
                         lowStockCountElement.textContent = lowStockItemCount;
                     }
@@ -2465,12 +2440,17 @@
                         <div class="movement-block-details">
                             <h4 class="text-md font-semibold text-gray-700 mb-2">Itens do Pedido:</h4>
                             <ul>
-                                ${mov.itens.map(item => `
-                                    <li>
-                                        <span>${item.quantidade}x ${item.modelo || item.componente || 'N/A'}</span>
-                                        <span>Tampo: ${item.tampo || 'N/A'}</span>
-                                    </li>
-                                `).join('')}
+                                ${mov.itens.map(item => {
+                                    let itemDisplay = `${item.quantidade}x `;
+                                    if (item.modelo_cja && item.tampo_tipo) {
+                                        itemDisplay += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+                                    } else if (item.componente) {
+                                        itemDisplay += item.componente;
+                                    } else {
+                                        itemDisplay += 'N/A';
+                                    }
+                                    return `<li><span>${itemDisplay}</span></li>`;
+                                }).join('')}
                             </ul>
                         </div>
                     `;
@@ -2502,23 +2482,21 @@
 
         function openSaidaManualModal() {
             document.getElementById('formSaidaManual').reset();
-            saidaConjuntoItems = {};
-            saidaAvulsaItems = [];
-            updateConjuntoItemsDisplay('saida');
-            updateAvulsaItemsDisplay('saida'); // Ensure this is called
+            saidaConjuntoItems = []; // Limpa os itens de conjunto
+            saidaAvulsaItems = []; // Limpa os itens avulsos
+            updateConjuntoItemsDisplay('saida'); // Atualiza a exibição dos conjuntos
+            updateAvulsaItemsDisplay('saida'); // Atualiza a exibição dos avulsos
+            
+            // Popula os dropdowns de seleção de conjunto para Saída Manual
             populateCJATypesDropdown('saidaConjuntoTipoCJA', CJA_TYPES);
             populateCJAModelsDropdown('saidaConjuntoModeloCJA', CJA_MODELS);
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
+            
             openModal('saidaManualModal'); 
         }
 
         // Função para adicionar um item avulso ao container (reajuste ou saída)
-        function addManualItem(containerId, typePrefix) {
-            const container = document.getElementById(containerId);
-            if (!container) {
-                console.error(`Container com ID ${containerId} não encontrado.`);
-                return;
-            }
+        function addManualItem(typePrefix) {
             // Add a new item to the array, with default values
             const newItem = {
                 componente: '',
@@ -2538,7 +2516,7 @@
         }
 
         // Função para remover um item avulso do container
-        function removeDynamicItem(buttonElement) {
+        function removeDynamicItem(buttonElement, typePrefix) {
             const itemDiv = buttonElement.closest('div.flex.items-end');
             if (itemDiv) {
                 const index = parseInt(itemDiv.getAttribute('data-index'));
@@ -2546,21 +2524,30 @@
                     console.error("Invalid data-index for item removal.");
                     return;
                 }
-                const type = itemDiv.closest('form').id.includes('reajuste') ? 'reajuste' : 'saida';
-                if (type === 'reajuste') {
+                if (typePrefix === 'reajuste') {
                     reajusteAvulsaItems.splice(index, 1);
-                } else if (type === 'saida') {
+                } else if (typePrefix === 'saida') {
                     saidaAvulsaItems.splice(index, 1);
                 }
-                updateAvulsaItemsDisplay(type); 
+                updateAvulsaItemsDisplay(typePrefix); 
             }
         }
 
+        // Função para remover um conjunto pronto do container (apenas para saída manual)
+        function removeConjuntoItem(buttonElement) {
+            const itemDiv = buttonElement.closest('div.flex.items-center');
+            if (itemDiv) {
+                const index = parseInt(itemDiv.getAttribute('data-index'));
+                if (isNaN(index)) {
+                    console.error("Invalid data-index for conjunto item removal.");
+                    return;
+                }
+                saidaConjuntoItems.splice(index, 1);
+                updateConjuntoItemsDisplay('saida');
+            }
+        }
 
-        // Removida a função generateConjuntoItems, pois a lógica de preenchimento automático
-        // de componentes de CJA foi desativada para reajustes.
-        // Agora, os itens avulsos são adicionados manualmente.
-
+        // Atualiza a exibição dos conjuntos prontos adicionados (para saída manual)
         function updateConjuntoItemsDisplay(type) {
             const container = document.getElementById(`${type}ConjuntoItemsContainer`);
             if (!container) {
@@ -2569,26 +2556,30 @@
             }
             container.innerHTML = '';
             let hasItems = false;
-            const itemsToDisplay = (type === 'reajuste') ? reajusteConjuntoItems : saidaConjuntoItems;
+            const itemsToDisplay = (type === 'saida') ? saidaConjuntoItems : []; // Apenas para saída manual
 
-            for (const compName in itemsToDisplay) {
-                const quantity = itemsToDisplay[compName];
-                if (quantity > 0) {
-                    hasItems = true;
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'flex items-center justify-between bg-white p-2 rounded-md shadow-sm mb-2';
-                    itemDiv.innerHTML = `
-                        <span class="font-medium">${compName}</span>
-                        <span class="text-gray-600">Qtd: ${quantity}</span>
-                    `;
-                    container.appendChild(itemDiv);
-                }
-            }
-            if (!hasItems) {
+            if (itemsToDisplay.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum conjunto adicionado ainda.</p>';
+                return;
             }
+
+            itemsToDisplay.forEach((item, index) => {
+                hasItems = true;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex items-center justify-between bg-white p-2 rounded-md shadow-sm mb-2';
+                itemDiv.setAttribute('data-index', index); // Adiciona o índice para remoção
+
+                const itemDisplay = `${item.quantidade}x ${item.tipo_cja} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+
+                itemDiv.innerHTML = `
+                    <span class="font-medium">${itemDisplay}</span>
+                    <button type="button" onclick="removeConjuntoItem(this)" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
+                `;
+                container.appendChild(itemDiv);
+            });
         }
 
+        // Atualiza a exibição dos itens avulsos adicionados (reajuste ou saída)
         function updateAvulsaItemsDisplay(type) {
             const container = document.getElementById(`${type}ManualItemsContainer`);
             if (!container) {
@@ -2621,7 +2612,7 @@
                         <label for="${type}AvulsaQuantidade${index}" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
                         <input type="number" id="${type}AvulsaQuantidade${index}" class="input-field w-full" min="1" value="${item.quantidade}">
                     </div>
-                    <button type="button" onclick="removeDynamicItem(this)" class="btn-secondary p-2 rounded-md">X</button>
+                    <button type="button" onclick="removeDynamicItem(this, '${type}')" class="btn-secondary p-2 rounded-md">X</button>
                 `;
                 container.appendChild(itemDiv);
 
@@ -3066,7 +3057,15 @@
                 let tipoAcao = mov.tipo;
 
                 if (mov.tipo === "Saída - Pedido") {
-                    detalhes = `Pedido/OS: ${mov.os_number}, Destino: ${mov.cidade_destino}, Itens: ${mov.itens.map(item => `${item.quantidade}x ${item.modelo || item.componente}`).join(', ')}`;
+                    detalhes = `Pedido/OS: ${mov.os_number}, Destino: ${mov.cidade_destino}, Itens: ${mov.itens.map(item => {
+                        if (item.modelo_cja && item.tampo_tipo) {
+                            return `${item.quantidade}x ${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+                        } else if (item.componente) {
+                            return `${item.quantidade}x ${item.componente}`;
+                        } else {
+                            return 'N/A';
+                        }
+                    }).join(', ')}`;
                 } else if (mov.tipo === "Entrada - Manual") {
                     detalhes = `Tipo: ${mov.tipo_entrada}, Descrição: ${mov.descricao}, Itens: ${mov.itens.map(item => `${item.quantidade}x ${item.componente}`).join(', ')}`;
                 } else if (mov.tipo === "Produção - Conjunto Pronto") {
@@ -3129,7 +3128,15 @@
                     const createdDate = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : 'N/A';
                     const updatedDate = order.updated_at ? new Date(order.updated_at).toLocaleString('pt-BR') : 'N/A';
                     
-                    const itensResumo = order.itens.map(item => `${item.quantidade}x ${item.modelo_cja} (${item.tampo_tipo})`).join(', ');
+                    const itensResumo = order.itens.map(item => {
+                        if (item.modelo_cja && item.tampo_tipo) {
+                            return `${item.quantidade}x ${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+                        } else if (item.componente) {
+                            return `${item.quantidade}x ${item.componente}`;
+                        } else {
+                            return 'N/A';
+                        }
+                    }).join(', ');
 
                     let statusColorClass = '';
                     if (order.status === 'Pendente') {
@@ -3196,12 +3203,11 @@
 
         function confirmAction(message, callback) {
             document.getElementById('confirmModalMessage').textContent = message;
-            document.getElementById('customConfirmModal').classList.add('open'); // Usa 'open' para o modal-overlay
-            document.getElementById('customConfirmModal').classList.remove('hidden');
+            openModal('customConfirmModal'); // Usa a função openModal
             confirmActionCallback = callback;
         }
 
-        // Função de Paginação Genérica
+        // Função de Paginação Genérica (Não utilizada atualmente, mas mantida para referência futura)
         function renderPagination(containerId, totalPages, currentPage, fetchFunction) {
             const paginationContainer = document.getElementById(containerId);
             paginationContainer.innerHTML = ''; // Limpa a paginação anterior
@@ -3411,12 +3417,6 @@
                 }
             });
 
-            // Removidos os event listeners para geração automática de conjuntos no reajuste
-            // document.getElementById('reajusteConjuntoTipo').addEventListener('change', () => generateConjuntoItems('reajuste'));
-            // document.getElementById('reajusteConjuntoModelo').addEventListener('change', () => generateConjuntoItems('reajuste'));
-            // document.getElementById('reajusteConjuntoQuantidade').addEventListener('input', () => generateConjuntoItems('reajuste'));
-            // document.getElementById('reajusteConjuntoTampo').addEventListener('change', () => generateConjuntoItems('reajuste')); 
-
             // Popula dropdowns para formulários de adicionar/retirar conjuntos
             populateCJATypesDropdown('addConjuntosTipoCJALocal', CJA_TYPES);
             populateCJAModelsDropdown('addConjuntosModeloCJALocal', CJA_MODELS);
@@ -3434,6 +3434,7 @@
             populateCJAModelsDropdown('retirarConjuntosModeloCJADistrito', CJA_MODELS);
             populateTampoTypesDropdown('retirarConjuntosTampoTipoDistrito', TAMPO_TYPES);
 
+            // Popula dropdowns para o formulário de Saída Manual (conjuntos prontos)
             populateCJATypesDropdown('saidaConjuntoTipoCJA', CJA_TYPES);
             populateCJAModelsDropdown('saidaConjuntoModeloCJA', CJA_MODELS);
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
@@ -3442,32 +3443,60 @@
             document.getElementById('selectCJA').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
             document.getElementById('selectTampo').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
 
-            // Event listeners para os botões de adicionar conjunto/item avulso
-            document.getElementById('add-reajuste-conjunto-button').addEventListener('click', () => {
-                const tipo = document.getElementById('reajusteConjuntoTipo');
-                const modelo = document.getElementById('reajusteConjuntoModelo');
-                const quantidade = document.getElementById('reajusteConjuntoQuantidade');
-                const tampo = document.getElementById('reajusteConjuntoTampo');
+            // Event listeners para os botões de adicionar item avulso (reajuste)
+            document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
+                addManualItem('reajuste');
+            });
 
-                let isValid = true;
-                isValid = validateField(tipo, document.getElementById('reajusteConjuntoTipo-validation')) && isValid;
-                isValid = validateField(modelo, document.getElementById('reajusteConjuntoModelo-validation')) && isValid;
-                isValid = validateField(quantidade, document.getElementById('reajusteConjuntoQuantidade-validation')) && isValid;
-                isValid = validateField(tampo, document.getElementById('reajusteConjuntoTampo-validation')) && isValid;
-
-                if (!isValid) {
-                    showToast('Por favor, preencha todos os campos obrigatórios para o conjunto.', 'error');
+            // Event listener para o formulário de Reajuste de Estoque
+            document.getElementById('formReajusteEstoque')?.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                if (!validateForm('formReajusteEstoque')) {
+                    showToast('Por favor, corrija os erros no formulário.', 'error');
                     return;
                 }
 
-                // Lógica para adicionar conjuntos prontos ao reajuste
-                const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipo.value}-${modelo.value}-${tampo.value}`;
-                reajusteConjuntoItems[modeloCompleto] = (reajusteConjuntoItems[modeloCompleto] || 0) + parseInt(quantidade.value);
+                const tipoOperacao = document.getElementById('reajusteTipoOperacao').value;
+                const descricao = document.getElementById('reajusteDescricao').value;
 
-                updateConjuntoItemsDisplay('reajuste');
-                showToast(`Conjunto ${tipo.value}-${modelo.value} (${quantidade.value}x) adicionado para reajuste.`, 'success');
+                if (reajusteAvulsaItems.length === 0) {
+                    showToast('Por favor, adicione pelo menos um item avulso para o reajuste.', 'error');
+                    return;
+                }
+
+                // Valida os itens avulsos
+                let allItemsValid = true;
+                reajusteAvulsaItems.forEach((item, index) => {
+                    if (!item.componente || item.quantidade <= 0) {
+                        allItemsValid = false;
+                        showToast(`Item avulso ${index + 1}: Selecione um componente e uma quantidade válida.`, 'error');
+                    }
+                });
+
+                if (!allItemsValid) {
+                    return;
+                }
+
+                const data = {
+                    tipo_operacao: tipoOperacao,
+                    descricao: descricao,
+                    itens: reajusteAvulsaItems // Envia os itens avulsos
+                };
+
+                const result = await postData('/reajuste_estoque', data);
+                if (result) {
+                    showToast(result.message, 'success');
+                    document.getElementById('formReajusteEstoque').reset();
+                    reajusteAvulsaItems = []; // Limpa a lista após o envio
+                    updateAvulsaItemsDisplay('reajuste');
+                    loadEstoque();
+                    loadMovimentacoes();
+                    loadDashboardData();
+                }
             });
 
+
+            // Event listener para adicionar conjunto pronto na Saída Manual
             document.getElementById('add-saida-conjunto-button').addEventListener('click', () => {
                 const tipoCJA = document.getElementById('saidaConjuntoTipoCJA');
                 const modeloCJA = document.getElementById('saidaConjuntoModeloCJA');
@@ -3485,22 +3514,90 @@
                     return;
                 }
 
-                const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipoCJA.value}-${modeloCJA.value}-${tampoTipo.value}`; 
-
-                saidaConjuntoItems[modeloCompleto] = (saidaConjuntoItems[modeloCompleto] || 0) + parseInt(quantidade.value);
+                // Adiciona o conjunto pronto como um item
+                saidaConjuntoItems.push({
+                    tipo_cja: tipoCJA.value,
+                    modelo_cja: modeloCJA.value,
+                    tampo_tipo: tampoTipo.value,
+                    quantidade: parseInt(quantidade.value)
+                });
 
                 updateConjuntoItemsDisplay('saida');
-                showToast(`Conjunto '${modeloCompleto}' (${quantidade.value}x) adicionado para saída.`, 'success');
+                showToast(`Conjunto ${tipoCJA.value}-${modeloCJA.value} (${quantidade.value}x) adicionado para saída.`, 'success');
+                // Limpa os campos do formulário de adição de conjunto após adicionar
+                tipoCJA.value = '';
+                modeloCJA.value = '';
+                tampoTipo.value = '';
+                quantidade.value = '1';
             });
 
-            document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
-                addManualItem('reajusteAvulsaItemsContainer', 'reajuste');
-            });
-
+            // Event listener para adicionar item avulso na Saída Manual
             document.getElementById('add-saida-item-button').addEventListener('click', () => {
-                addManualItem('saidaManualItemsContainer', 'saida');
+                addManualItem('saida');
             });
 
+            // Event listener para o formulário de Saída Manual
+            document.getElementById('formSaidaManual')?.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                if (!validateForm('formSaidaManual')) {
+                    showToast('Por favor, corrija os erros no formulário.', 'error');
+                    return;
+                }
+
+                const osNumber = document.getElementById('saidaOsNumber').value;
+                const cidadeDestino = document.getElementById('saidaCidadeDestino').value;
+                const dataEmissao = document.getElementById('saidaDataEmissao').value;
+                const prazoEntrega = document.getElementById('saidaPrazoEntrega').value;
+
+                // Combina conjuntos prontos e itens avulsos
+                const allItems = [];
+                saidaConjuntoItems.forEach(item => allItems.push(item));
+                saidaAvulsaItems.forEach(item => allItems.push(item));
+
+                if (allItems.length === 0) {
+                    showToast('Por favor, adicione pelo menos um conjunto ou item avulso para registrar a saída.', 'error');
+                    return;
+                }
+
+                // Valida os itens avulsos e conjuntos
+                let allItemsValid = true;
+                allItems.forEach((item, index) => {
+                    if (item.componente && (!item.componente || item.quantidade <= 0)) { // Para itens avulsos
+                        allItemsValid = false;
+                        showToast(`Item ${index + 1}: Selecione um componente e uma quantidade válida.`, 'error');
+                    } else if (item.modelo_cja && (!item.tipo_cja || !item.modelo_cja || !item.tampo_tipo || item.quantidade <= 0)) { // Para conjuntos
+                        allItemsValid = false;
+                        showToast(`Conjunto ${index + 1}: Preencha todos os campos e uma quantidade válida.`, 'error');
+                    }
+                });
+
+                if (!allItemsValid) {
+                    return;
+                }
+
+                const data = {
+                    os_number: osNumber,
+                    cidade_destino: cidadeDestino,
+                    data_emissao: dataEmissao,
+                    prazo_entrega: prazoEntrega,
+                    itens: allItems, // Envia todos os itens combinados
+                    tipo: "Saída - Pedido" // Tipo fixo para saída manual
+                };
+
+                const result = await postData('/movimentacoes', data);
+                if (result) {
+                    showToast(result.message, 'success');
+                    document.getElementById('formSaidaManual').reset();
+                    saidaConjuntoItems = [];
+                    saidaAvulsaItems = [];
+                    updateConjuntoItemsDisplay('saida');
+                    updateAvulsaItemsDisplay('saida');
+                    loadEstoque();
+                    loadMovimentacoes();
+                    loadDashboardData();
+                    closeModal('saidaManualModal');
+                }
+            });
 
             // Event listeners para os cards do dashboard
             document.getElementById('card-monthly-movements')?.addEventListener('click', () => openDashboardMovementsModal('monthly'));
@@ -3599,14 +3696,6 @@
             document.querySelectorAll('#table-producao th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-producao', currentMovimentacoesData.filter(mov => mov.tipo === "Produção - Conjunto Pronto"), populateMovimentacoesTable, header.dataset.sortKey));
             });
-            // Removed specific sort listeners for dashboard movement details tables as they are replaced by the modal
-            // document.querySelectorAll('#table-monthly-movements-details th[data-sort-key]').forEach(header => {
-            //     header.addEventListener('click', () => sortTable('table-monthly-movements-details', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'), header.dataset.sortKey));
-            // });
-            // document.querySelectorAll('#table-weekly-movements-details th[data-sort-key]').forEach(header => {
-            //     header.addEventListener('click', () => sortTable('table-weekly-movements-details', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'), header.dataset.sortKey));
-            // });
-
 
             document.querySelectorAll('#table-audit-log th[data-sort-key]').forEach(header => { 
                 header.addEventListener('click', () => sortTable('table-audit-log', currentAuditLogData, populateAuditLogsTable, header.dataset.sortKey));
@@ -3622,8 +3711,7 @@
 
             // Event listeners para os botões do modal de confirmação
             document.getElementById('confirmModalConfirm').addEventListener('click', () => {
-                document.getElementById('customConfirmModal').classList.remove('open');
-                document.getElementById('customConfirmModal').classList.add('hidden');
+                closeModal('customConfirmModal'); // Usa a função closeModal
                 if (confirmActionCallback) {
                     confirmActionCallback();
                     confirmActionCallback = null; 
@@ -3631,8 +3719,7 @@
             });
 
             document.getElementById('confirmModalCancel').addEventListener('click', () => {
-                document.getElementById('customConfirmModal').classList.remove('open');
-                document.getElementById('customConfirmModal').classList.add('hidden');
+                closeModal('customConfirmModal'); // Usa a função closeModal
                 confirmActionCallback = null; 
             });
 
