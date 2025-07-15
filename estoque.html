@@ -13,12 +13,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Estilos Customizados */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter gray for background */
+            color: #1f2937; /* Darker text for better contrast */
+        }
         .sidebar {
             width: 250px;
             transition: width 0.3s ease;
             position: fixed; /* Fixa a sidebar */
             height: 100%; /* Ocupa toda a altura */
             overflow-y: auto; /* Permite scroll se o conteúdo for muito grande */
+            background-color: #3730a3; /* Darker indigo for sidebar */
+            color: white;
+            z-index: 999;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .sidebar.collapsed {
             width: 64px; /* w-16 */
@@ -37,95 +46,28 @@
         .sidebar ul li a {
             display: flex;
             align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.65rem;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .sidebar ul li a:hover {
+            background-color: #4338ca; /* Slightly lighter indigo on hover */
+            color: white;
         }
         .sidebar ul li a i {
             flex-shrink: 0; /* Impede que o ícone encolha */
         }
 
-        /* Estilos para o Modal (janela pop-up) */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0; /* Começa invisível */
-            visibility: hidden; /* Esconde completamente */
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .modal-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        .modal-content {
-            background-color: white;
+        /* Main Content Area */
+        .main-content-area {
+            margin-left: 250px; /* Adjust for sidebar width */
             padding: 2rem;
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            max-width: 90%; /* Ajuste para responsividade */
-            max-height: 90%;
-            overflow-y: auto;
-            position: relative;
-            transform: scale(0.95); /* Começa um pouco menor */
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Animação de entrada */
+            transition: margin-left 0.3s ease;
         }
-        .modal-overlay.open .modal-content {
-            transform: scale(1); /* Escala para o tamanho normal */
-            opacity: 1; /* Fica visível */
-        }
-        .modal-close-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6B7280; /* gray-500 */
-        }
-        .modal-close-button:hover {
-            color: #1F2937; /* gray-800 */
+        .main-content-area.expanded {
+            margin-left: 64px; /* When sidebar is collapsed */
         }
 
-        /* Responsividade para o layout principal */
-        @media (max-width: 767px) {
-            .sidebar {
-                width: 0; /* Sidebar escondida por padrão em mobile */
-                position: fixed;
-                z-index: 50; /* Acima do conteúdo principal */
-                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-            }
-            .sidebar.open {
-                width: 250px; /* Abre a sidebar em mobile */
-            }
-            .main-content {
-                margin-left: 0; /* Não tem margem em mobile */
-                width: 100%;
-            }
-            .main-content.expanded {
-                margin-left: 0; /* Não tem margem em mobile */
-            }
-            .sidebar-toggle-mobile {
-                display: block; /* Mostra o botão de toggle em mobile */
-            }
-        }
-        /* Base Styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Lighter gray for background */
-            color: #1f2937; /* Darker text for better contrast */
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
         /* Card Styles */
         .card {
             background-color: #ffffff;
@@ -190,17 +132,54 @@
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
         /* Modal Styles */
-        .close-button {
-            color: #9ca3af; /* Lighter gray for close button */
-            font-size: 2rem; /* Larger close button */
-            font-weight: bold;
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .modal-close-button {
             position: absolute;
             top: 1rem;
-            right: 1.5rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
             cursor: pointer;
-            transition: color 0.2s;
+            color: #6B7280;
         }
-        .close-button:hover, .close-button:focus { color: #4b5563; }
+        .modal-close-button:hover {
+            color: #1F2937;
+        }
         .modal-footer {
             display: flex;
             justify-content: flex-end;
@@ -210,25 +189,25 @@
 
         /* Tab Buttons */
         .tab-button {
-            padding: 0.85rem 1.75rem; /* More padding */
-            border-radius: 0.65rem; /* Slightly more rounded */
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.65rem;
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             font-size: 0.95rem;
-            flex-shrink: 0; /* Prevent shrinking on small screens */
+            flex-shrink: 0;
         }
         .tab-button.active {
-            background-color: #4f46e5; /* indigo-600 */
+            background-color: #4f46e5;
             color: white;
-            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3); /* Subtle shadow for active tab */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3);
         }
         .tab-button:not(.active):hover {
-            background-color: #e0e7ff; /* indigo-100 */
+            background-color: #e0e7ff;
             color: #4f46e5;
         }
-        .tab-content { display: none; } /* Default hidden */
-        .tab-content.active { display: block !important; } /* Only active is visible */
+        .tab-content { display: none; }
+        .tab-content.active { display: block !important; }
 
         /* Buttons */
         .btn-primary {
@@ -270,17 +249,17 @@
         }
 
         /* Form Elements */
-        .input-field, .select-field, .textarea-field { /* Added textarea-field */
+        .input-field, .select-field, .textarea-field {
             width: 100%;
-            padding: 0.85rem 1rem; /* More padding */
+            padding: 0.85rem 1rem;
             border: 1px solid #d1d5db;
-            border-radius: 0.5rem; /* More rounded */
+            border-radius: 0.5rem;
             margin-top: 0.5rem;
-            margin-bottom: 1.25rem; /* Slightly more margin */
+            margin-bottom: 1.25rem;
             transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            background-color: #f9fafb; /* Light background for inputs */
+            background-color: #f9fafb;
         }
-        .input-field:focus, .select-field:focus, .textarea-field:focus { /* Added textarea-field */
+        .input-field:focus, .select-field:focus, .textarea-field:focus {
             outline: none;
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
@@ -290,7 +269,7 @@
             border-radius: 0.4rem;
         }
 
-        /* Sidebar */
+        /* Sidebar Toggle for Mobile */
         .sidebar-toggle {
             display: block;
             background-color: #4f46e5;
@@ -302,50 +281,23 @@
             text-align: center;
             margin-bottom: 1.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar {
-            display: block; /* Always block for desktop, hidden by transform on mobile */
-            width: 100%;
-            padding: 1.5rem;
-            background-color: #3730a3; /* Darker indigo for sidebar */
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            overflow-y: auto;
-            z-index: 999;
-            transition: transform 0.3s ease-in-out;
-            transform: translateX(-100%); /* Hidden by default on mobile */
-        }
-        .sidebar.active {
-            transform: translateX(0); /* Slide in */
-        }
-        .sidebar nav ul li button {
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-            border-radius: 0.65rem;
-        }
-        .sidebar nav ul li button:hover {
-            background-color: #4338ca; /* Slightly lighter indigo on hover */
+            position: fixed; /* Fixa o botão no topo */
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000; /* Acima de tudo */
         }
 
         /* Responsive Adjustments */
         @media (min-width: 768px) { /* md breakpoint */
             .sidebar-toggle { display: none; }
             .sidebar {
-                display: block;
-                width: 18rem; /* Wider sidebar */
-                position: fixed;
-                height: 100vh;
-                padding: 2rem; /* More padding */
-                border-radius: 0 1rem 1rem 0; /* Rounded right corners */
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-                transform: translateX(0); /* Always visible */
+                transform: translateX(0); /* Always visible on desktop */
             }
             .main-content-area {
-                margin-left: 18rem; /* Compensate for wider sidebar */
-                padding: 2rem; /* Consistent padding */
+                margin-left: 250px; /* Compensate for sidebar width */
+            }
+            .main-content-area.expanded {
+                margin-left: 64px; /* When sidebar is collapsed */
             }
             .flex-container { flex-direction: row; }
             .modal-content { padding: 2rem; }
@@ -353,7 +305,17 @@
 
         /* Mobile Specific Adjustments */
         @media (max-width: 767px) {
-            .main-content-area { padding: 1rem; }
+            .sidebar {
+                transform: translateX(-100%); /* Hidden by default on mobile */
+                width: 250px; /* Full width when active */
+            }
+            .sidebar.active {
+                transform: translateX(0); /* Slide in */
+            }
+            .main-content-area {
+                margin-left: 0; /* No margin on mobile */
+                padding: 1rem;
+            }
             h2 { font-size: 1.8rem; }
             h3 { font-size: 1.2rem; }
             .card { padding: 1.25rem; margin-bottom: 1rem; border-radius: 0.75rem; }
@@ -361,11 +323,11 @@
             th, td { padding: 0.75rem 0.8rem; font-size: 0.8rem; }
             .tab-button { padding: 0.6rem 1rem; font-size: 0.85rem; }
             .btn-primary, .btn-secondary { padding: 0.7rem 1.4rem; font-size: 0.9rem; }
-            .input-field, .select-field, .textarea-field { padding: 0.7rem; margin-bottom: 1rem; border-radius: 0.4rem; } /* Added textarea-field */
+            .input-field, .select-field, .textarea-field { padding: 0.7rem; margin-bottom: 1rem; border-radius: 0.4rem; }
             .modal-content { padding: 1.5rem; border-radius: 0.75rem; }
-            .close-button { font-size: 1.75rem; top: 0.75rem; right: 1.25rem; }
+            .modal-close-button { font-size: 1.75rem; top: 0.75rem; right: 1.25rem; }
             .modal-footer { margin-top: 1.25rem; }
-            .flex.items-end { flex-direction: column; align-items: stretch; } /* Stack items in dynamic forms */
+            .flex.items-end { flex-direction: column; align-items: stretch; }
             .flex.items-end > div { width: 100%; margin-bottom: 0.5rem; }
             .flex.items-end button { width: 100%; margin-top: 0.5rem; }
         }
@@ -381,7 +343,7 @@
             gap: 0.75rem;
         }
         .toast {
-            background-color: #334155; /* Slate 700 */
+            background-color: #334155;
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 0.65rem;
@@ -395,9 +357,9 @@
             font-size: 0.95rem;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background-color: #10b981; } /* Emerald 500 */
-        .toast.error { background-color: #ef4444; }   /* Red 500 */
-        .toast.info { background-color: #3b82f6; }    /* Blue 500 */
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
 
         /* Loading Spinner */
         .loading-overlay {
@@ -428,7 +390,7 @@
         }
 
         /* Validation Styles */
-        .input-field.invalid, .select-field.invalid, .textarea-field.invalid { border-color: #ef4444; } /* Added textarea-field */
+        .input-field.invalid, .select-field.invalid, .textarea-field.invalid { border-color: #ef4444; }
         .validation-message {
             color: #ef4444;
             font-size: 0.8rem;
@@ -464,20 +426,20 @@
             justify-content: space-between;
             align-items: center;
             font-weight: 600;
-            color: #374151; /* gray-700 */
+            color: #374151;
         }
         .movement-block-details {
             margin-top: 1rem;
             border-top: 1px solid #e5e7eb;
             padding-top: 1rem;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .movement-block.expanded .movement-block-details {
-            display: block; /* Show when expanded */
+            display: block;
         }
         .movement-block-details p {
             margin-bottom: 0.5rem;
-            color: #4b5563; /* gray-600 */
+            color: #4b5563;
             font-size: 0.9rem;
         }
         .movement-block-details ul {
@@ -509,7 +471,7 @@
     <!-- Modal de Produção Mínima de Conjuntos -->
     <div id="producaoMinimaModal" class="modal-overlay hidden">
         <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
-            <button id="closeProducaoMinimaModal" class="modal-close-button">&times;</button>
+            <button id="closeProducaoMinimaModal" class="modal-close-button" onclick="closeModal('producaoMinimaModal')">&times;</button>
             <h3 class="text-2xl font-semibold text-gray-700 mb-6">Mínimo de Conjuntos para Produção</h3>
             <p class="text-gray-600 mb-4 text-sm">Esta tabela mostra a quantidade mínima de conjuntos que podem ser montados para cada modelo CJA e tipo de tampo, com base nos componentes disponíveis em estoque (Assentos, Encostos, Porta-Livros e Tampos MDF/Plástico).</p>
             <div class="overflow-x-auto">
@@ -535,7 +497,7 @@
     <!-- Modal de Movimentações do Dashboard (Mês/Semana) -->
     <div id="dashboardMovementsModal" class="modal-overlay hidden">
         <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
-            <button id="closeDashboardMovementsModal" class="modal-close-button">&times;</button>
+            <button id="closeDashboardMovementsModal" class="modal-close-button" onclick="closeModal('dashboardMovementsModal')">&times;</button>
             <h3 class="text-2xl font-semibold text-gray-700 mb-6" id="dashboardMovementsModalTitle">Detalhes das Movimentações</h3>
             <div class="mb-4">
                 <label for="search-dashboard-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
@@ -1422,7 +1384,6 @@
             </div>
         </div>
     </div>
-
     <!-- Firebase SDK e Lógica do Aplicativo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1682,6 +1643,7 @@
             }
         }
 
+        // Fix: Ensure openModal and closeModal are globally accessible or defined before use
         function openModal(modalId) { 
             const modal = document.getElementById(modalId);
             if (modal) {
@@ -3562,10 +3524,13 @@
                 // Valida os itens avulsos e conjuntos
                 let allItemsValid = true;
                 allItems.forEach((item, index) => {
-                    if (item.componente && (!item.componente || item.quantidade <= 0)) { // Para itens avulsos
+                    // Check for individual components
+                    if (item.componente && (!item.componente || item.quantidade <= 0)) {
                         allItemsValid = false;
-                        showToast(`Item ${index + 1}: Selecione um componente e uma quantidade válida.`, 'error');
-                    } else if (item.modelo_cja && (!item.tipo_cja || !item.modelo_cja || !item.tampo_tipo || item.quantidade <= 0)) { // Para conjuntos
+                        showToast(`Item avulso ${index + 1}: Selecione um componente e uma quantidade válida.`, 'error');
+                    } 
+                    // Check for complete sets
+                    else if (item.modelo_cja && (!item.tipo_cja || !item.modelo_cja || !item.tampo_tipo || item.quantidade <= 0)) {
                         allItemsValid = false;
                         showToast(`Conjunto ${index + 1}: Preencha todos os campos e uma quantidade válida.`, 'error');
                     }
