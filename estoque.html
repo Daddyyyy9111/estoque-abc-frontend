@@ -1717,20 +1717,19 @@
             const targetView = document.getElementById(sectionId);
             if (targetView) {
                 targetView.classList.remove('hidden'); // Mostra a seção alvo
-                const linkTitles = { // Mapeamento de IDs de seção para títulos
+                const displayTitles = { // Mapeamento de IDs de SEÇÃO para TÍTULOS de exibição
                     'dashboard-view': 'Dashboard',
                     'estoque-componentes-view': 'Estoque de Componentes',
                     'estoque-conjuntos-view': 'Estoque Conjuntos Prontos ABC',
                     'estoque-distrito-view': 'Estoque Distrito',
                     'movimentacoes-view': 'Movimentações',
                     'pedidos-pendentes-view': 'Pedidos Pendentes',
-                    // 'registrar-saida-manual-view': 'Registrar Saída Manual', // Removido, pois é um modal
                     'log-auditoria-view': 'Log de Auditoria',
                     'gerenciamento-usuarios-view': 'Gerenciamento de Usuários'
                 };
                 const currentPageTitleElement = document.getElementById('current-page-title');
                 if (currentPageTitleElement) {
-                    currentPageTitleElement.textContent = linkTitles[sectionId] || 'Página';
+                    currentPageTitleElement.textContent = displayTitles[sectionId] || 'Página';
                 } else {
                     console.error('Elemento #current-page-title não encontrado para atualizar o título da página.');
                 }
@@ -3455,6 +3454,18 @@
             // Event listener para o toggle da sidebar (mobile)
             document.getElementById('sidebar-toggle-button')?.addEventListener('click', toggleSidebar);
 
+            // Mapeamento dos IDs dos links da sidebar para os IDs das seções no HTML
+            const linkToSectionMap = {
+                'linkDashboard': 'dashboard-view',
+                'linkEstoqueComponentes': 'estoque-componentes-view',
+                'linkEstoqueConjuntos': 'estoque-conjuntos-view',
+                'linkEstoqueDistrito': 'estoque-distrito-view',
+                'linkMovimentacoes': 'movimentacoes-view',
+                'linkPedidosPendentes': 'pedidos-pendentes-view',
+                'linkLogAuditoria': 'log-auditoria-view',
+                'linkGerenciamentoUsuarios': 'gerenciamento-usuarios-view'
+            };
+
             // Event listener para os links da sidebar
             document.querySelectorAll('aside nav ul li a').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -3462,9 +3473,12 @@
                     if (link.id === 'linkRegistrarSaidaManual') { // Tratamento especial para o link de Saída Manual
                         openSaidaManualModal();
                     } else {
-                        // Converte linkDashboard para dashboard-view, linkEstoqueConjuntos para estoque-conjuntos-view, etc.
-                        const targetId = link.id.replace('link', '').toLowerCase() + '-view'; 
-                        showSection(targetId);
+                        const targetId = linkToSectionMap[link.id]; // Usa o mapeamento
+                        if (targetId) {
+                            showSection(targetId);
+                        } else {
+                            console.error(`Mapeamento para o link ID '${link.id}' não encontrado.`);
+                        }
                     }
                     
                     // Fecha a sidebar em mobile após clicar no link
