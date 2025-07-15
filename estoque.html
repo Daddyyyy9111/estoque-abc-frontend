@@ -621,26 +621,20 @@
                     <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-monthly-movements">
                         <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Movimentações do Mês</h3>
                         <p class="text-3xl md:text-4xl font-bold text-green-600" id="monthly-movements">0</p>
-                        <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver detalhes</p>
                     </div>
                     <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-weekly-movements">
                         <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Movimentações da Semana</h3>
                         <p class="text-3xl md:text-4xl font-bold text-blue-600" id="weekly-movements">0</p>
-                        <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver detalhes</p>
                     </div>
                 </div>
                 <!-- Produção Mínima de Conjuntos - Link para o Modal -->
-                <div class="card mt-6">
+                <div class="card mt-6 cursor-pointer hover:bg-gray-50 transition duration-200" id="card-producao-minima-modal">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos</h3>
-                    <a href="#" id="openProducaoMinimaModalLink" class="text-blue-600 hover:text-blue-800 underline text-base">
-                        Clique para ver o que pode ser produzido
-                    </a>
                 </div>
                 <!-- Estoque Baixo Section -->
                 <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-low-stock">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Itens com Estoque Baixo (Abaixo de 300)</h3>
                     <p class="text-3xl md:text-4xl font-bold text-red-600" id="low-stock-count">0</p>
-                    <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver detalhes</p>
                 </div>
                 <div id="low-stock-details-wrapper" class="hidden card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes dos Itens com Estoque Baixo</h3>
@@ -663,7 +657,6 @@
                 <!-- Produção Mínima Section (Este card agora apenas para visualização de dados no dashboard, o modal é o principal) -->
                 <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-producao-minima">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos (Dashboard)</h3>
-                    <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver os detalhes no dashboard</p>
                 </div>
                 <div id="producao-minima-details-wrapper" class="hidden card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Mínimo de Conjuntos para Produção (Dashboard Detalhes)</h3>
@@ -1709,7 +1702,7 @@
             if (sidebar && mainContent) {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
-                // For mobile, also toggle 'open' class
+                // For mobile, also toggle 'active' class
                 if (window.innerWidth < 768) {
                     sidebar.classList.toggle('active'); // Use active for mobile sidebar
                 }
@@ -3505,10 +3498,10 @@
 
             // Event listener para o modal de Produção Mínima
             const producaoMinimaModal = document.getElementById('producaoMinimaModal');
-            const openProducaoMinimaModalLink = document.getElementById('openProducaoMinimaModalLink');
+            const cardProducaoMinimaModal = document.getElementById('card-producao-minima-modal'); // Updated ID
             const closeProducaoMinimaModal = document.getElementById('closeProducaoMinimaModal');
 
-            openProducaoMinimaModalLink.addEventListener('click', (e) => {
+            cardProducaoMinimaModal.addEventListener('click', (e) => { // Updated event listener
                 e.preventDefault();
                 populateProducaoMinima(currentEstoqueData); // Usa os dados reais do estoque
                 openModal('producaoMinimaModal');
