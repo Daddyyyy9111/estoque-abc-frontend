@@ -1518,7 +1518,7 @@
             apiKey: "AIzaSyA0NNzu5Uuhoq1IYtiIz3QLJZAzywUwd9M",
             authDomain: "controleestoqueabcmoveis.firebaseapp.com",
             projectId: "controleestoqueabcmoveis",
-            storageBucket: "controleestoqueabcmoveis.firebasestorage.app",
+            storageBucket: "controleestoqueabcmoveis.firebase.app",
             messagingSenderId: "190823747316",
             appId: "1:190823747316:web:305d6cea2c3b2fd5d5d8a1",
             measurementId: "G-23FRRYSS0T"
@@ -3462,7 +3462,8 @@
                     if (link.id === 'linkRegistrarSaidaManual') { // Tratamento especial para o link de Saída Manual
                         openSaidaManualModal();
                     } else {
-                        const targetId = link.id.replace('link', '') + '-view'; // Converte linkDashboard para dashboard-view
+                        // Converte linkDashboard para dashboard-view, linkEstoqueConjuntos para estoque-conjuntos-view, etc.
+                        const targetId = link.id.replace('link', '').toLowerCase() + '-view'; 
                         showSection(targetId);
                     }
                     
