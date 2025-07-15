@@ -7,9 +7,113 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome CDN para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- Chart.js CDN para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Estilos Customizados */
+        .sidebar {
+            width: 250px;
+            transition: width 0.3s ease;
+            position: fixed; /* Fixa a sidebar */
+            height: 100%; /* Ocupa toda a altura */
+            overflow-y: auto; /* Permite scroll se o conteúdo for muito grande */
+        }
+        .sidebar.collapsed {
+            width: 64px; /* w-16 */
+        }
+        .sidebar-content {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            white-space: nowrap; /* Impede quebras de linha */
+            overflow: hidden; /* Esconde o texto quando recolhido */
+            flex-grow: 1; /* Permite que o texto ocupe o espaço restante */
+        }
+        .sidebar.collapsed .sidebar-content {
+            opacity: 0;
+            width: 0;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+        }
+        .sidebar ul li a i {
+            flex-shrink: 0; /* Impede que o ícone encolha */
+        }
+
+        /* Estilos para o Modal (janela pop-up) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0; /* Começa invisível */
+            visibility: hidden; /* Esconde completamente */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%; /* Ajuste para responsividade */
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95); /* Começa um pouco menor */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Animação de entrada */
+        }
+        .modal-overlay.open .modal-content {
+            transform: scale(1); /* Escala para o tamanho normal */
+            opacity: 1; /* Fica visível */
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6B7280; /* gray-500 */
+        }
+        .modal-close-button:hover {
+            color: #1F2937; /* gray-800 */
+        }
+
+        /* Responsividade para o layout principal */
+        @media (max-width: 767px) {
+            .sidebar {
+                width: 0; /* Sidebar escondida por padrão em mobile */
+                position: fixed;
+                z-index: 50; /* Acima do conteúdo principal */
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            }
+            .sidebar.open {
+                width: 250px; /* Abre a sidebar em mobile */
+            }
+            .main-content {
+                margin-left: 0; /* Não tem margem em mobile */
+                width: 100%;
+            }
+            .main-content.expanded {
+                margin-left: 0; /* Não tem margem em mobile */
+            }
+            .sidebar-toggle-mobile {
+                display: block; /* Mostra o botão de toggle em mobile */
+            }
+        }
         /* Base Styles */
         body {
             font-family: 'Inter', sans-serif;
@@ -376,6 +480,31 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
+    <!-- Modal de Produção Mínima de Conjuntos -->
+    <div id="producaoMinimaModal" class="modal-overlay hidden">
+        <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
+            <button id="closeProducaoMinimaModal" class="modal-close-button">&times;</button>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-6">Mínimo de Conjuntos para Produção</h3>
+            <p class="text-gray-600 mb-4 text-sm">Esta tabela mostra a quantidade mínima de conjuntos que podem ser montados para cada modelo CJA e tipo de tampo, com base nos componentes disponíveis em estoque (Assentos, Encostos, Porta-Livros e Tampos MDF/Plástico).</p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-2 px-4 text-left">Modelo CJA</th>
+                            <th class="py-2 px-4 text-left">Tampo MDF</th>
+                            <th class="py-2 px-4 text-left">Tampo Plástico</th>
+                        </tr>
+                    </thead>
+                    <tbody id="producao-minima-table-body" class="text-gray-600 text-sm font-light">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-red-500 text-xs mt-4">
+                *Nota: Os dados apresentados aqui são uma simulação para demonstração do frontend. A lógica de cálculo real da produção mínima, que considera apenas Tampos MDF e Plástico (ignorando Masticmol), deve ser implementada e validada no seu **backend Python** para refletir o estoque verdadeiro.*
+            </p>
+        </div>
+    </div>
 
     <!-- Toast Container -->
     <div id="toast-container"></div>
@@ -412,55 +541,64 @@
             <div class="text-2xl font-bold mb-8 text-center">ABC Móveis</div>
             <nav>
                 <ul>
-                    <li class="mb-4">
-                        <button id="nav-dashboard" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('dashboard'); window.toggleSidebar();">
-                            Dashboard
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkDashboard" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-tachometer-alt mr-3 text-lg"></i>
+                            <span class="sidebar-content">Dashboard</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-estoque-atual" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('estoque-atual'); window.toggleSidebar();">
-                            Estoque de Componentes
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkEstoqueComponentes" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-box mr-3 text-lg"></i>
+                            <span class="sidebar-content">Estoque de Componentes</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-estoque-conjuntos-prontos-abc" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('estoque-conjuntos-prontos-abc'); window.toggleSidebar();">
-                            Estoque Conjuntos Prontos ABC
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkEstoqueConjuntos" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-boxes mr-3 text-lg"></i>
+                            <span class="sidebar-content">Estoque Conjuntos Prontos ABC</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-estoque-distrito" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('estoque-distrito'); window.toggleSidebar();">
-                            Estoque Distrito
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkEstoqueDistrito" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-warehouse mr-3 text-lg"></i>
+                            <span class="sidebar-content">Estoque Distrito</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-movimentacoes" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('movimentacoes'); window.toggleSidebar();">
-                            Movimentações
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkMovimentacoes" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-exchange-alt mr-3 text-lg"></i>
+                            <span class="sidebar-content">Movimentações</span>
+                        </a>
                     </li>
-                    <!-- Pedidos Pendentes: Agora apenas para visualização -->
-                    <li class="mb-4" id="nav-pedidos-pendentes-li">
-                        <button id="nav-pedidos-pendentes" class="w-full text-left py-3 px-5 rounded-lg bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200 font-semibold relative z-50" onclick="window.showSection('pedidos-pendentes'); window.toggleSidebar(); window.loadPendingOrders();">
-                            Pedidos Pendentes
-                        </button>
+                    <li class="mb-3" id="nav-pedidos-pendentes-li">
+                        <a href="#" id="linkPedidosPendentes" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-hourglass-half mr-3 text-lg"></i>
+                            <span class="sidebar-content">Pedidos Pendentes</span>
+                        </a>
                     </li>
-                    <li class="mb-4" id="nav-registrar-saida-li">
-                        <button id="nav-registrar-saida" class="w-full text-left py-3 px-5 rounded-lg bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200 font-semibold relative z-50" onclick="window.openSaidaManualModal(); window.toggleSidebar();">
-                            Registrar Saída Manual
-                        </button>
+                    <li class="mb-3" id="nav-registrar-saida-li">
+                        <a href="#" id="linkRegistrarSaidaManual" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-clipboard-list mr-3 text-lg"></i>
+                            <span class="sidebar-content">Registrar Saída Manual</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-log-auditoria" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('log-auditoria'); window.toggleSidebar(); window.loadAuditLogs();">
-                            Log de Auditoria
-                        </button>
+                    <li class="mb-3">
+                        <a href="#" id="linkLogAuditoria" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-history mr-3 text-lg"></i>
+                            <span class="sidebar-content">Log de Auditoria</span>
+                        </a>
                     </li>
-                    <li class="mb-4 hidden" id="nav-gerenciamento-usuarios-li">
-                        <button id="nav-gerenciamento-usuarios" class="w-full text-left py-3 px-5 rounded-lg hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600 transition duration-200" onclick="window.showSection('gerenciamento-usuarios'); window.toggleSidebar(); window.loadUsers();">
-                            Gerenciamento de Usuários
-                        </button>
+                    <li class="mb-3" id="nav-gerenciamento-usuarios-li">
+                        <a href="#" id="linkGerenciamentoUsuarios" class="flex items-center text-gray-200 hover:text-white py-2 px-3 rounded-md transition duration-200">
+                            <i class="fas fa-users mr-3 text-lg"></i>
+                            <span class="sidebar-content">Gerenciamento de Usuários</span>
+                        </a>
                     </li>
-                    <li class="mb-4">
-                        <button id="nav-logout" class="w-full text-left py-3 px-5 rounded-lg bg-red-500 hover:bg-red-600 focus:outline-none focus:bg-red-600 transition duration-200 font-semibold">
-                            Sair (<span id="logged-in-username"></span>)
+                    <li class="mb-3 mt-auto">
+                        <button id="nav-logout" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full flex items-center justify-center">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            <span class="sidebar-content">Sair (<span id="logged-in-username"></span>)</span>
                         </button>
                     </li>
                 </ul>
@@ -470,7 +608,7 @@
         <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 main-content-area">
             <!-- Dashboard Section -->
-            <section id="dashboard" class="tab-content active">
+            <section id="dashboard-view" class="tab-content active">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Dashboard</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
                     <div class="card">
@@ -488,7 +626,13 @@
                         <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver detalhes</p>
                     </div>
                 </div>
-
+                <!-- Produção Mínima de Conjuntos - Link para o Modal -->
+                <div class="card mt-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos</h3>
+                    <a href="#" id="openProducaoMinimaModalLink" class="text-blue-600 hover:text-blue-800 underline text-base">
+                        Clique para ver o que pode ser produzido
+                    </a>
+                </div>
                 <!-- Estoque Baixo Section -->
                 <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-low-stock">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Itens com Estoque Baixo (Abaixo de 300)</h3>
@@ -513,13 +657,13 @@
                     </div>
                 </div>
 
-                <!-- Produção Mínima Section -->
+                <!-- Produção Mínima Section (Este card agora apenas para visualização de dados no dashboard, o modal é o principal) -->
                 <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-producao-minima">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos</h3>
-                    <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver o que pode ser produzido</p>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos (Dashboard)</h3>
+                    <p class="text-indigo-500 text-sm md:text-base mt-2">Clique para ver os detalhes no dashboard</p>
                 </div>
                 <div id="producao-minima-details-wrapper" class="hidden card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Mínimo de Conjuntos para Produção</h3>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Mínimo de Conjuntos para Produção (Dashboard Detalhes)</h3>
                     <p class="text-gray-600 mb-4">Esta tabela mostra a quantidade mínima de conjuntos que podem ser montados para cada modelo CJA e tipo de tampo, com base nos componentes disponíveis em estoque (Assentos, Encostos, Porta-Livros e Tampos).</p>
                     <div class="table-container">
                         <table id="table-producao-minima">
@@ -558,6 +702,8 @@
                                 <option value="CJA-05">CJA-05</option>
                                 <option value="CJA-04">CJA-04</option>
                                 <option value="CJA-03">CJA-03</option>
+                                <option value="CJA-02">CJA-02</option>
+                                <option value="CJA-01">CJA-01</option>
                             </select>
                         </div>
                         <div class="w-full md:w-1/3">
@@ -569,8 +715,8 @@
                             </select>
                         </div>
                         <div class="w-full md:w-1/3 flex justify-center md:justify-end gap-2 mt-4 md:mt-0">
-                            <button id="producao-cja-semanal-btn" class="btn-primary" onclick="window.updateCJAProductionChart('weekly', true)">Semanal</button>
-                            <button id="producao-cja-mensal-btn" class="btn-secondary" onclick="window.updateCJAProductionChart('monthly', true)">Mensal</button>
+                            <button id="producao-cja-semanal-btn" class="btn-primary" onclick="updateCJAProductionChart('weekly', true)">Semanal</button>
+                            <button id="producao-cja-mensal-btn" class="btn-secondary" onclick="updateCJAProductionChart('monthly', true)">Mensal</button>
                         </div>
                     </div>
                     <div class="relative h-80 w-full">
@@ -625,7 +771,7 @@
             </section>
 
             <!-- Estoque de Componentes Section (Antigo Estoque Atual) -->
-            <section id="estoque-atual" class="tab-content">
+            <section id="estoque-componentes-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Estoque de Componentes Detalhado</h2>
 
                 <div class="mb-4">
@@ -751,6 +897,8 @@
                                     <option value="CJA-05">CJA-05</option>
                                     <option value="CJA-04">CJA-04</option>
                                     <option value="CJA-03">CJA-03</option>
+                                    <option value="CJA-02">CJA-02</option>
+                                    <option value="CJA-01">CJA-01</option>
                                 </select>
                                 <p id="reajusteConjuntoModelo-validation" class="validation-message">Campo obrigatório.</p>
                             </div>
@@ -790,7 +938,7 @@
             </section>
 
             <!-- Estoque de Conjuntos Prontos ABC Section -->
-            <section id="estoque-conjuntos-prontos-abc" class="tab-content">
+            <section id="estoque-conjuntos-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Estoque de Conjuntos Prontos - ABC</h2>
                 
                 <div class="mb-4">
@@ -840,6 +988,8 @@
                                 <option value="CJA-05">CJA-05</option>
                                 <option value="CJA-04">CJA-04</option>
                                 <option value="CJA-03">CJA-03</option>
+                                <option value="CJA-02">CJA-02</option>
+                                <option value="CJA-01">CJA-01</option>
                             </select>
                             <p id="addConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
                         </div>
@@ -885,6 +1035,8 @@
                                 <option value="CJA-05">CJA-05</option>
                                 <option value="CJA-04">CJA-04</option>
                                 <option value="CJA-03">CJA-03</option>
+                                <option value="CJA-02">CJA-02</option>
+                                <option value="CJA-01">CJA-01</option>
                             </select>
                             <p id="retirarConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
                         </div>
@@ -911,7 +1063,7 @@
             </section>
 
             <!-- Estoque Distrito Section -->
-            <section id="estoque-distrito" class="tab-content">
+            <section id="estoque-distrito-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Estoque Distrito</h2>
                 
                 <div class="mb-4">
@@ -961,6 +1113,8 @@
                                 <option value="CJA-05">CJA-05</option>
                                 <option value="CJA-04">CJA-04</option>
                                 <option value="CJA-03">CJA-03</option>
+                                <option value="CJA-02">CJA-02</option>
+                                <option value="CJA-01">CJA-01</option>
                             </select>
                             <p id="addConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
                         </div>
@@ -1006,6 +1160,8 @@
                                 <option value="CJA-05">CJA-05</option>
                                 <option value="CJA-04">CJA-04</option>
                                 <option value="CJA-03">CJA-03</option>
+                                <option value="CJA-02">CJA-02</option>
+                                <option value="CJA-01">CJA-01</option>
                             </select>
                             <p id="retirarConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
                         </div>
@@ -1032,13 +1188,13 @@
             </section>
 
             <!-- Movimentações Section -->
-            <section id="movimentacoes" class="tab-content">
+            <section id="movimentacoes-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Histórico de Movimentações</h2>
                 <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
                     <div class="flex border-b border-gray-200 mb-4">
-                        <button id="tab-saidas" class="tab-button active" onclick="window.showMovementType('saidas', this)">Saídas (Pedidos/OS)</button>
-                        <button id="tab-entradas" class="tab-button" onclick="window.showMovementType('entradas', this)">Entradas (Compras/Ajustes)</button>
-                        <button id="tab-producao" class="tab-button" onclick="window.showMovementType('producao', this)">Produção (Conjuntos Prontos)</button>
+                        <button id="tab-saidas" class="tab-button active">Saídas (Pedidos/OS)</button>
+                        <button id="tab-entradas" class="tab-button">Entradas (Compras/Ajustes)</button>
+                        <button id="tab-producao" class="tab-button">Produção (Conjuntos Prontos)</button>
                     </div>
 
                     <div class="mb-4">
@@ -1097,7 +1253,7 @@
                                         <th data-sort-key="timestamp">DATA/HORA</th>
                                         <th data-sort-key="tipo_cja">TIPO CJA</th>
                                         <th data-sort-key="modelo_cja">MODELO CJA</th>
-                                        <th data-sort-key="tampo_tipo">TAMPO</th>
+                                    <th data-sort-key="tampo_tipo">TAMPO</th>
                                         <th data-sort-key="quantidade">QUANTIDADE</th>
                                         <th data-sort-key="destino_estoque">DESTINO</th>
                                         <th data-sort-key="registrado_por">REGISTRADO POR</th>
@@ -1114,7 +1270,7 @@
             </section>
 
             <!-- Pedidos Pendentes Section (APENAS VISUALIZAÇÃO) -->
-            <section id="pedidos-pendentes" class="tab-content">
+            <section id="pedidos-pendentes-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Pedidos Pendentes</h2>
                 
                 <div class="card">
@@ -1148,7 +1304,7 @@
             </section>
 
             <!-- Log de Auditoria Section -->
-            <section id="log-auditoria" class="tab-content">
+            <section id="log-auditoria-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Log de Auditoria</h2>
                 <div class="card">
                     <p class="text-gray-600 mb-4">Esta seção exibe um histórico de todas as ações de movimentação de estoque registradas no sistema.</p>
@@ -1176,7 +1332,7 @@
             </section>
 
             <!-- Gerenciamento de Usuários Section (Apenas Admin) -->
-            <section id="gerenciamento-usuarios" class="tab-content">
+            <section id="gerenciamento-usuarios-view" class="tab-content">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Gerenciamento de Usuários</h2>
 
                 <!-- Formulário para Criar Novo Usuário -->
@@ -1237,7 +1393,7 @@
     <!-- Modal para Detalhes da Movimentação -->
     <div id="orderDetailsModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="window.closeModal('orderDetailsModal')">&times;</span>
+            <span class="close-button" onclick="closeModal('orderDetailsModal')">&times;</span>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4" id="orderDetailTitle">Detalhes da Movimentação</h3>
             <p class="text-gray-700 text-sm md:text-base mb-2"><strong>OS:</strong> <span id="modalOsNumber"></span></p>
             <p class="text-gray-700 text-sm md:text-base mb-2"><strong>Cidade de Destino:</strong> <span id="modalCidadeDestino"></span></p>
@@ -1265,7 +1421,7 @@
     <!-- Modal para Saída Manual (mantido como modal) -->
     <div id="saidaManualModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="window.closeModal('saidaManualModal')">&times;</span>
+            <span class="close-button" onclick="closeModal('saidaManualModal')">&times;</span>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Registrar Saída Manual (Pedido/OS)</h3>
             
             <form id="formSaidaManual">
@@ -1304,6 +1460,8 @@
                         <option value="CJA-05">CJA-05</option>
                         <option value="CJA-04">CJA-04</option>
                         <option value="CJA-03">CJA-03</option>
+                        <option value="CJA-02">CJA-02</option>
+                        <option value="CJA-01">CJA-01</option>
                     </select>
                     <p id="saidaConjuntoModeloCJA-validation" class="validation-message">Campo obrigatório.</p>
                 </div>
@@ -1337,7 +1495,7 @@
                 <button type="button" id="add-saida-item-button" class="btn-secondary w-full md:w-auto mb-4">Adicionar Mais Item Avulso</button>
 
                 <div class="modal-footer">
-                    <button type="button" onclick="window.closeModal('saidaManualModal')" class="btn-secondary">Cancelar</button>
+                    <button type="button" onclick="closeModal('saidaManualModal')" class="btn-secondary">Cancelar</button>
                     <button type="submit" class="btn-primary">Registrar Saída</button>
                 </div>
             </form>
@@ -1356,14 +1514,14 @@
         </div>
     </div>
 
-    <!-- Firebase SDK (Adicionado aqui para garantir que esteja disponível) -->
+    <!-- Firebase SDK e Lógica do Aplicativo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         
         // URL do seu backend no Render.com
         // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO SEU SERVIÇO DE BACKEND NO RENDER.COM
-        const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; 
+        const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; // <--- VERIFIQUE E ATUALIZE ESTA URL!
 
         // Firebase configuration (Hardcoded for GitHub Pages deployment)
         const firebaseConfig = {
@@ -1394,19 +1552,22 @@
                 'CJA-06': { 'ASSENTO-ZURICH-CJA-06': 1, 'ENCOSTO-ZURICH-CJA-06': 1, 'PORTA-LIVRO': 1 },
                 'CJA-05': { 'ASSENTO-ZURICH-CJA-05': 1, 'ENCOSTO-ZURICH-CJA-05': 1, 'PORTA-LIVRO': 1 },
                 'CJA-04': { 'ASSENTO-ZURICH-CJA-04': 1, 'ENCOSTO-ZURICH-CJA-04': 1, 'PORTA-LIVRO': 1 },
-                'CJA-03': { 'ASSENTO-ZURICH-CJA-03': 1, 'ENCOSTO-ZURICH-CJA-03': 1, 'PORTA-LIVRO': 1 }
+                'CJA-03': { 'ASSENTO-ZURICH-CJA-03': 1, 'ENCOSTO-ZURICH-CJA-03': 1, 'PORTA-LIVRO': 1 },
+                'CJA-02': { 'ASSENTO-ZURICH-CJA-02': 1, 'ENCOSTO-ZURICH-CJA-02': 1, 'PORTA-LIVRO': 1 }, // Adicionado
+                'CJA-01': { 'ASSENTO-ZURICH-CJA-01': 1, 'ENCOSTO-ZURICH-CJA-01': 1, 'PORTA-LIVRO': 1 }  // Adicionado
             },
             'MASTICMOL': {
                 'CJA-06': { 'ASSENTO-MASTICMOL-CJA-06': 1, 'ENCOSTO-MASTICMOL-CJA-06': 1, 'PORTA-LIVRO': 1 },
                 'CJA-05': { 'ASSENTO-MASTICMOL-CJA-05': 1, 'ENCOSTO-MASTICMOL-CJA-05': 1, 'PORTA-LIVRO': 1 },
                 'CJA-04': { 'ASSENTO-MASTICMOL-CJA-04': 1, 'ENCOSTO-MASTICMOL-CJA-04': 1, 'PORTA-LIVRO': 1 },
-                'CJA-03': { 'ASSENTO-MASTICMOL-CJA-03': 1, 'ENCOSTO-MASTICMOL-CJA-03': 1, 'PORTA-LIVRO': 1 }
+                'CJA-03': { 'ASSENTO-MASTICMOL-CJA-03': 1, 'ENCOSTO-MASTICMOL-CJA-03': 1, 'PORTA-LIVRO': 1 },
+                'CJA-02': { 'ASSENTO-MASTICMOL-CJA-02': 1, 'ENCOSTO-MASTICMOL-CJA-02': 1, 'PORTA-LIVRO': 1 }, // Adicionado
+                'CJA-01': { 'ASSENTO-MASTICMOL-CJA-01': 1, 'ENCOSTO-MASTICMOL-CJA-01': 1, 'PORTA-LIVRO': 1 }  // Adicionado
             }
         };
 
         const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL'];
-        // Ordem invertida para CJAs
-        const CJA_MODELS = ['CJA-06', 'CJA-05', 'CJA-04', 'CJA-03']; 
+        const CJA_MODELS = ['CJA-06', 'CJA-05', 'CJA-04', 'CJA-03', 'CJA-02', 'CJA-01']; // Atualizado para incluir CJA-02 e CJA-01
         const CJA_TYPES = ['ZURICH', 'MASTICMOL'];
 
         // Variáveis para armazenar os dados brutos das tabelas para pesquisa e ordenação
@@ -1415,12 +1576,20 @@
         let currentUsersData = [];
         let currentLowStockData = [];
         let currentProducaoMinimaData = [];
-        let currentAuditLogData = []; 
-        let currentPendingOrdersData = []; 
+        let currentAuditLogData = [];
+        let currentPendingOrdersData = [];
 
         // Variáveis para os gráficos
-        let monthlyMovementsChartInstance = null; 
-        let cjaProductionChartInstance = null; 
+        let monthlyMovementsChartInstance = null;
+        let cjaProductionChartInstance = null;
+
+        // Variáveis para os itens de reajuste/saída manual
+        let reajusteConjuntoItems = {};
+        let reajusteAvulsaItems = [];
+        let saidaConjuntoItems = {};
+        let saidaAvulsaItems = [];
+
+        let confirmActionCallback = null; // Callback para o modal de confirmação
 
         // --- Funções de Autenticação ---
         async function login(username, password) {
@@ -1440,7 +1609,7 @@
                 showMainContent();
                 updateLoggedInUserDisplay();
                 checkUserRoleAccess();
-                window.showSection('dashboard'); 
+                showSection('dashboard-view'); // Usar showSection para carregar a view correta
                 showToast('Login bem-sucedido!', 'success');
                 return true;
             } catch (error) {
@@ -1536,82 +1705,91 @@
             }
         }
 
-        // --- Funções de Navegação e Modais (AGORA GLOBAIS) ---
-        window.toggleSidebar = function() { 
+        // --- Funções de Navegação e Modais ---
+        function toggleSidebar() { 
             const sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('active');
+            const mainContent = document.getElementById('main-content-wrapper'); // Usar main-content-wrapper
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                // For mobile, also toggle 'open' class
+                if (window.innerWidth < 768) {
+                    sidebar.classList.toggle('open');
+                }
             } else {
-                console.error('Elemento #sidebar não encontrado.');
+                console.error('Elemento #sidebar ou #main-content-wrapper não encontrado.');
             }
         }
 
-        window.showSection = function(sectionId) { 
+        function showSection(sectionId) { 
             console.log(`Função showSection chamada para: ${sectionId}`); 
 
             document.querySelectorAll('.tab-content').forEach(section => {
-                section.classList.remove('active');
+                section.classList.add('hidden'); // Esconde todas as seções
             });
-            const targetSection = document.getElementById(sectionId);
-            if (targetSection) {
-                targetSection.classList.add('active');
+            
+            const targetView = document.getElementById(sectionId);
+            if (targetView) {
+                targetView.classList.remove('hidden'); // Mostra a seção alvo
+                const linkTitles = { // Mapeamento de IDs de seção para títulos
+                    'dashboard-view': 'Dashboard',
+                    'estoque-componentes-view': 'Estoque de Componentes',
+                    'estoque-conjuntos-view': 'Estoque Conjuntos Prontos ABC',
+                    'estoque-distrito-view': 'Estoque Distrito',
+                    'movimentacoes-view': 'Movimentações',
+                    'pedidos-pendentes-view': 'Pedidos Pendentes',
+                    'registrar-saida-manual-view': 'Registrar Saída Manual',
+                    'log-auditoria-view': 'Log de Auditoria',
+                    'gerenciamento-usuarios-view': 'Gerenciamento de Usuários'
+                };
+                document.getElementById('current-page-title').textContent = linkTitles[sectionId] || 'Página';
+                
+                // Chamadas de fetch específicas para a view
+                if (sectionId === 'estoque-componentes-view') {
+                    loadEstoque();
+                } else if (sectionId === 'estoque-conjuntos-view') {
+                    loadEstoque(); // Reutiliza loadEstoque para popular as tabelas de conjuntos
+                } else if (sectionId === 'estoque-distrito-view') {
+                    loadEstoque(); // Reutiliza loadEstoque para popular as tabelas de distrito
+                } else if (sectionId === 'movimentacoes-view') {
+                    loadMovimentacoes();
+                } else if (sectionId === 'dashboard-view') {
+                    loadDashboardData();
+                } else if (sectionId === 'gerenciamento-usuarios-view') {
+                    loadUsers(); 
+                } else if (sectionId === 'log-auditoria-view') { 
+                    loadAuditLogs();
+                } else if (sectionId === 'pedidos-pendentes-view') { 
+                    loadPendingOrders();
+                }
             } else {
                 console.error(`Elemento de seção com ID ${sectionId} não encontrado.`);
             }
-
-            if (sectionId === 'estoque-atual' || sectionId === 'estoque-conjuntos-prontos-abc' || sectionId === 'estoque-distrito') {
-                loadEstoque();
-            } else if (sectionId === 'movimentacoes') {
-                loadMovimentacoes();
-            } else if (sectionId === 'dashboard') {
-                loadDashboardData();
-            } else if (sectionId === 'gerenciamento-usuarios') {
-                loadUsers(); 
-            } else if (sectionId === 'log-auditoria') { 
-                loadAuditLogs();
-            } else if (sectionId === 'pedidos-pendentes') { 
-                loadPendingOrders();
-            }
         }
 
-        window.openModal = function(modalId) { 
+        function openModal(modalId) { 
             const modal = document.getElementById(modalId);
             if (modal) {
-                modal.classList.add('active'); 
+                modal.classList.add('open'); // Usa 'open' para o modal-overlay
+                modal.classList.remove('hidden');
             } else {
                 console.error(`Elemento de modal com ID ${modalId} não encontrado.`);
             }
         }
 
-        window.closeModal = function(modalId) { 
+        function closeModal(modalId) { 
             const modal = document.getElementById(modalId);
             if (modal) {
-                modal.classList.remove('active'); 
-                if (modalId === 'saidaManualModal' && window.innerWidth < 768) { 
-                    const sidebar = document.getElementById('sidebar');
-                    if (sidebar && sidebar.classList.contains('active')) { 
-                        window.toggleSidebar(); 
-                    }
-                }
+                modal.classList.remove('open');
+                modal.classList.add('hidden');
             } else {
                 console.error(`Elemento de modal com ID ${modalId} não encontrado.`);
             }
         }
 
-        // Fecha o modal se clicar fora dele
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                const modalId = event.target.id;
-                const modal = document.getElementById(modalId);
-                if (modal && modal.id !== 'customConfirmModal') { 
-                    window.closeModal(modalId); 
-                }
-            }
-        }
-
-        // Função showMovementType (para tabs de Movimentações) (AGORA GLOBAL)
-        window.showMovementType = function(type, clickedButtonElement) { 
-            document.querySelectorAll('#movimentacoes .tab-button').forEach(button => {
+        // Função showMovementType (para tabs de Movimentações)
+        function showMovementType(type, clickedButtonElement) { 
+            document.querySelectorAll('#movimentacoes-view .tab-button').forEach(button => {
                 button.classList.remove('active');
             });
             if (clickedButtonElement) {
@@ -1619,7 +1797,7 @@
             }
 
             const targetContent = document.getElementById(`${type}-content`);
-            document.querySelectorAll('#movimentacoes .tab-content').forEach(content => {
+            document.querySelectorAll('#movimentacoes-view .tab-content').forEach(content => {
                 content.classList.remove('active');
             });
             if (targetContent) {
@@ -1630,7 +1808,7 @@
             filterTable('search-movimentacoes', currentMovimentacoesData, populateMovimentacoesTable, true);
         }
 
-        window.toggleVisibility = function(elementId) { 
+        function toggleVisibility(elementId) { 
             const element = document.getElementById(elementId);
             if (element) {
                 element.classList.toggle('hidden');
@@ -1640,10 +1818,12 @@
         // --- Loading Overlay Functions ---
         function showLoading() {
             document.getElementById('loading-overlay').style.display = 'flex';
+            document.body.classList.remove('loaded');
         }
 
         function hideLoading() {
             document.getElementById('loading-overlay').style.display = 'none';
+            document.body.classList.add('loaded');
         }
 
         // --- Toast Notification Functions ---
@@ -1696,7 +1876,7 @@
         function validateForm(formId) {
             const form = document.getElementById(formId);
             let allValid = true;
-            form.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => { // Added textarea
+            form.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
                 const validationMessageElement = document.getElementById(`${input.id}-validation`);
                 if (!validateField(input, validationMessageElement)) {
                     allValid = false;
@@ -1711,7 +1891,7 @@
             let filteredData = [];
 
             if (isMovementTable) {
-                const activeTab = document.querySelector('#movimentacoes .tab-button.active');
+                const activeTab = document.querySelector('#movimentacoes-view .tab-button.active');
                 let movementType = '';
                 if (activeTab && activeTab.id === 'tab-saidas') movementType = 'Saída - Pedido';
                 else if (activeTab && activeTab.id === 'tab-entradas') movementType = 'Entrada - Manual';
@@ -1997,8 +2177,10 @@
                     });
                 } else {
                     models.forEach(model => {
-                        const assentoQty = stockMap[`ASSENTO-${typePrefix}-${model}`] || 0;
-                        const encostoQty = stockMap[`ENCOSTO-${typePrefix}-${model}`] || 0;
+                        const assentoZurichQty = stockMap[`ASSENTO-ZURICH-${model}`] || 0;
+                        const encostoZurichQty = stockMap[`ENCOSTO-ZURICH-${model}`] || 0;
+                        const assentoMasticmolQty = stockMap[`ASSENTO-MASTICMOL-${model}`] || 0;
+                        const encostoMasticmolQty = stockMap[`ENCOSTO-MASTICMOL-${model}`] || 0;
                         const portaLivroQty = stockMap['PORTA-LIVRO'] || 0; 
 
                         hasData = true; 
@@ -2009,11 +2191,17 @@
                                 <td class="py-3 px-6 text-left">PORTA-LIVRO</td>
                                 <td class="py-3 px-6 text-left">${portaLivroQty}</td>
                             `;
-                        } else {
+                        } else if (typePrefix === 'ZURICH') {
                             row.innerHTML = `
                                 <td class="py-3 px-6 text-left">${model}</td>
-                                <td class="py-3 px-6 text-left">${assentoQty}</td>
-                                <td class="py-3 px-6 text-left">${encostoQty}</td>
+                                <td class="py-3 px-6 text-left">${assentoZurichQty}</td>
+                                <td class="py-3 px-6 text-left">${encostoZurichQty}</td>
+                            `;
+                        } else if (typePrefix === 'MASTICMOL') {
+                            row.innerHTML = `
+                                <td class="py-3 px-6 text-left">${model}</td>
+                                <td class="py-3 px-6 text-left">${assentoMasticmolQty}</td>
+                                <td class="py-3 px-6 text-left">${encostoMasticmolQty}</td>
                             `;
                         }
                         tbody.appendChild(row);
@@ -2082,7 +2270,7 @@
                         <td class="py-3 px-6 text-left">${mov.os_number}</td>
                         <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
-                            <button onclick="window.showOrderDetailsModal('${mov.os_number}', ${JSON.stringify(mov.itens)}, '${mov.cidade_destino}', '${mov.data_emissao}', '${mov.prazo_entrega}')" class="text-indigo-500 hover:underline">
+                            <button onclick="showOrderDetailsModal('${mov.os_number}', ${escape(JSON.stringify(mov.itens))}, '${mov.cidade_destino}', '${mov.data_emissao}', '${mov.prazo_entrega}')" class="text-indigo-500 hover:underline">
                                 ${conjuntosPedidos}
                             </button>
                         </td>
@@ -2168,30 +2356,44 @@
                         'ASSENTO-ZURICH-CJA-04', 'ENCOSTO-ZURICH-CJA-04',
                         'ASSENTO-ZURICH-CJA-05', 'ENCOSTO-ZURICH-CJA-05',
                         'ASSENTO-ZURICH-CJA-06', 'ENCOSTO-ZURICH-CJA-06',
+                        'ASSENTO-ZURICH-CJA-02', 'ENCOSTO-ZURICH-CJA-02', // Adicionado
+                        'ASSENTO-ZURICH-CJA-01', 'ENCOSTO-ZURICH-CJA-01', // Adicionado
                         'ASSENTO-MASTICMOL-CJA-03', 'ENCOSTO-MASTICMOL-CJA-03',
                         'ASSENTO-MASTICMOL-CJA-04', 'ENCOSTO-MASTICMOL-CJA-04',
                         'ASSENTO-MASTICMOL-CJA-05', 'ENCOSTO-MASTICMOL-CJA-05',
                         'ASSENTO-MASTICMOL-CJA-06', 'ENCOSTO-MASTICMOL-CJA-06',
+                        'ASSENTO-MASTICMOL-CJA-02', 'ENCOSTO-MASTICMOL-CJA-02', // Adicionado
+                        'ASSENTO-MASTICMOL-CJA-01', 'ENCOSTO-MASTICMOL-CJA-01', // Adicionado
                         'TAMPO-MDF-CJA-03', 'TAMPO-PLASTICO-CJA-03', 'TAMPO-MASTICMOL-CJA-03',
                         'TAMPO-MDF-CJA-04', 'TAMPO-PLASTICO-CJA-04', 'TAMPO-MASTICMOL-CJA-04',
                         'TAMPO-MDF-CJA-05', 'TAMPO-PLASTICO-CJA-05', 'TAMPO-MASTICMOL-CJA-05',
                         'TAMPO-MDF-CJA-06', 'TAMPO-PLASTICO-CJA-06', 'TAMPO-MASTICMOL-CJA-06',
+                        'TAMPO-MDF-CJA-02', 'TAMPO-PLASTICO-CJA-02', 'TAMPO-MASTICMOL-CJA-02', // Adicionado
+                        'TAMPO-MDF-CJA-01', 'TAMPO-PLASTICO-CJA-01', 'TAMPO-MASTICMOL-CJA-01', // Adicionado
                         'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-03-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-03-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-04-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-04-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-05-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-05-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-06-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-06-PLASTICO',
+                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-02-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-02-PLASTICO', // Adicionado
+                        'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-01-MDF', 'CONJUNTO-PRONTO-LOCAL-ZURICH-CJA-01-PLASTICO', // Adicionado
                         'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-03-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-03-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-04-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-04-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-05-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-05-PLASTICO',
                         'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-06-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-06-PLASTICO',
+                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-02-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-02-PLASTICO', // Adicionado
+                        'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-01-MDF', 'CONJUNTO-PRONTO-LOCAL-MASTICMOL-CJA-01-PLASTICO', // Adicionado
                         'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-03-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-03-PLASTICO',
                         'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-04-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-04-PLASTICO',
                         'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-05-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-05-PLASTICO',
                         'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-06-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-06-PLASTICO',
+                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-02-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-02-PLASTICO', // Adicionado
+                        'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-01-MDF', 'CONJUNTO-PRONTO-DISTRITO-ZURICH-CJA-01-PLASTICO', // Adicionado
                         'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-03-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-03-PLASTICO',
                         'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-04-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-04-PLASTICO',
                         'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-05-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-05-PLASTICO',
-                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-PLASTICO'
+                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-06-PLASTICO',
+                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-02-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-02-PLASTICO', // Adicionado
+                        'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-01-MDF', 'CONJUNTO-PRONTO-DISTRITO-MASTICMOL-CJA-01-PLASTICO'  // Adicionado
                     ];
 
 
@@ -2345,8 +2547,9 @@
             tableBody.appendChild(row);
         }
 
-        // --- Funções de Detalhes da Movimentação (Modal) (AGORA GLOBAL) ---
-        window.showOrderDetailsModal = function(osNumber, items, cidadeDestino, dataEmissao, prazoEntrega) {
+        // --- Funções de Detalhes da Movimentação (Modal) ---
+        function showOrderDetailsModal(osNumber, itemsEncoded, cidadeDestino, dataEmissao, prazoEntrega) {
+            const items = JSON.parse(unescape(itemsEncoded)); // Desescapa e parseia os itens
             const modalOsNumber = document.getElementById('modalOsNumber');
             if (modalOsNumber) modalOsNumber.textContent = osNumber;
 
@@ -2384,18 +2587,12 @@
             } else {
                 console.error('Elemento #orderItemsDetails não encontrado.');
             }
-            window.openModal('orderDetailsModal'); 
+            openModal('orderDetailsModal'); 
         }
 
         // --- Funções de Adição Manual ---
 
-        let reajusteConjuntoItems = {}; 
-        let reajusteAvulsaItems = []; 
-        let saidaConjuntoItems = {};
-        let saidaAvulsaItems = [];
-        
-
-        window.openSaidaManualModal = function() {
+        function openSaidaManualModal() {
             document.getElementById('formSaidaManual').reset();
             saidaConjuntoItems = {};
             saidaAvulsaItems = [];
@@ -2404,7 +2601,7 @@
             populateCJATypesDropdown('saidaConjuntoTipoCJA', CJA_TYPES);
             populateCJAModelsDropdown('saidaConjuntoModeloCJA', CJA_MODELS);
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
-            window.openModal('saidaManualModal'); 
+            openModal('saidaManualModal'); 
         }
 
         // Função para adicionar um item avulso ao container (reajuste ou saída)
@@ -2428,7 +2625,7 @@
         }
 
         // Função para remover um item avulso do container
-        function removeManualItem(buttonElement) {
+        function removeDynamicItem(buttonElement) {
             const itemDiv = buttonElement.closest('div.flex.items-end');
             if (itemDiv) {
                 const index = parseInt(itemDiv.getAttribute('data-index'));
@@ -2445,7 +2642,6 @@
                 updateAvulsaItemsDisplay(type); 
             }
         }
-        window.removeDynamicItem = removeManualItem; 
 
 
         function generateConjuntoItems(type) {
@@ -2567,6 +2763,10 @@
                             <option value="ENCOSTO-ZURICH-CJA-05" ${item.componente === 'ENCOSTO-ZURICH-CJA-05' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-05</option>
                             <option value="ASSENTO-ZURICH-CJA-06" ${item.componente === 'ASSENTO-ZURICH-CJA-06' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-06</option>
                             <option value="ENCOSTO-ZURICH-CJA-06" ${item.componente === 'ENCOSTO-ZURICH-CJA-06' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-06</option>
+                            <option value="ASSENTO-ZURICH-CJA-02" ${item.componente === 'ASSENTO-ZURICH-CJA-02' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-02</option>
+                            <option value="ENCOSTO-ZURICH-CJA-02" ${item.componente === 'ENCOSTO-ZURICH-CJA-02' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-02</option>
+                            <option value="ASSENTO-ZURICH-CJA-01" ${item.componente === 'ASSENTO-ZURICH-CJA-01' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-01</option>
+                            <option value="ENCOSTO-ZURICH-CJA-01" ${item.componente === 'ENCOSTO-ZURICH-CJA-01' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-01</option>
                             <option value="ASSENTO-MASTICMOL-CJA-03" ${item.componente === 'ASSENTO-MASTICMOL-CJA-03' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-03</option>
                             <option value="ENCOSTO-MASTICMOL-CJA-03" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-03' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-03</option>
                             <option value="ASSENTO-MASTICMOL-CJA-04" ${item.componente === 'ASSENTO-MASTICMOL-CJA-04' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-04</option>
@@ -2575,6 +2775,10 @@
                             <option value="ENCOSTO-MASTICMOL-CJA-05" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-05' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-05</option>
                             <option value="ASSENTO-MASTICMOL-CJA-06" ${item.componente === 'ASSENTO-MASTICMOL-CJA-06' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-06</option>
                             <option value="ENCOSTO-MASTICMOL-CJA-06" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-06' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-06</option>
+                            <option value="ASSENTO-MASTICMOL-CJA-02" ${item.componente === 'ASSENTO-MASTICMOL-CJA-02' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-02</option>
+                            <option value="ENCOSTO-MASTICMOL-CJA-02" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-02' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-02</option>
+                            <option value="ASSENTO-MASTICMOL-CJA-01" ${item.componente === 'ASSENTO-MASTICMOL-CJA-01' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-01</option>
+                            <option value="ENCOSTO-MASTICMOL-CJA-01" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-01' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-01</option>
                             <option value="TAMPO-MDF-CJA-03" ${item.componente === 'TAMPO-MDF-CJA-03' ? 'selected' : ''}>TAMPO-MDF-CJA-03</option>
                             <option value="TAMPO-PLASTICO-CJA-03" ${item.componente === 'TAMPO-PLASTICO-CJA-03' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-03</option>
                             <option value="TAMPO-MASTICMOL-CJA-03" ${item.componente === 'TAMPO-MASTICMOL-CJA-03' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-03</option>
@@ -2587,13 +2791,19 @@
                             <option value="TAMPO-MDF-CJA-06" ${item.componente === 'TAMPO-MDF-CJA-06' ? 'selected' : ''}>TAMPO-MDF-CJA-06</option>
                             <option value="TAMPO-PLASTICO-CJA-06" ${item.componente === 'TAMPO-PLASTICO-CJA-06' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-06</option>
                             <option value="TAMPO-MASTICMOL-CJA-06" ${item.componente === 'TAMPO-MASTICMOL-CJA-06' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-06</option>
+                            <option value="TAMPO-MDF-CJA-02" ${item.componente === 'TAMPO-MDF-CJA-02' ? 'selected' : ''}>TAMPO-MDF-CJA-02</option>
+                            <option value="TAMPO-PLASTICO-CJA-02" ${item.componente === 'TAMPO-PLASTICO-CJA-02' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-02</option>
+                            <option value="TAMPO-MASTICMOL-CJA-02" ${item.componente === 'TAMPO-MASTICMOL-CJA-02' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-02</option>
+                            <option value="TAMPO-MDF-CJA-01" ${item.componente === 'TAMPO-MDF-CJA-01' ? 'selected' : ''}>TAMPO-MDF-CJA-01</option>
+                            <option value="TAMPO-PLASTICO-CJA-01" ${item.componente === 'TAMPO-PLASTICO-CJA-01' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-01</option>
+                            <option value="TAMPO-MASTICMOL-CJA-01" ${item.componente === 'TAMPO-MASTICMOL-CJA-01' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-01</option>
                         </select>
                     </div>
                     <div class="flex-1">
                         <label for="${type}AvulsaQuantidade${index}" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
                         <input type="number" id="${type}AvulsaQuantidade${index}" class="input-field w-full" min="1" value="${item.quantidade}">
                     </div>
-                    <button type="button" onclick="window.removeDynamicItem(this, '${type}')" class="btn-secondary p-2 rounded-md">X</button>
+                    <button type="button" onclick="removeDynamicItem(this)" class="btn-secondary p-2 rounded-md">X</button>
                 `;
                 container.appendChild(itemDiv);
 
@@ -2653,399 +2863,14 @@
             });
         }
 
-
-        document.getElementById('add-reajuste-conjunto-button').addEventListener('click', () => {
-            const tipo = document.getElementById('reajusteConjuntoTipo');
-            const modelo = document.getElementById('reajusteConjuntoModelo');
-            const quantidade = document.getElementById('reajusteConjuntoQuantidade');
-            const tampo = document.getElementById('reajusteConjuntoTampo');
-
-            let isValid = true;
-            isValid = validateField(tipo, document.getElementById('reajusteConjuntoTipo-validation')) && isValid;
-            isValid = validateField(modelo, document.getElementById('reajusteConjuntoModelo-validation')) && isValid;
-            isValid = validateField(quantidade, document.getElementById('reajusteConjuntoQuantidade-validation')) && isValid;
-            isValid = validateField(tampo, document.getElementById('reajusteConjuntoTampo-validation')) && isValid;
-
-            if (!isValid) {
-                showToast('Por favor, preencha todos os campos obrigatórios para o conjunto.', 'error');
-                return;
-            }
-
-            const components = CJA_COMPONENT_MAP[tipo.value]?.[modelo.value];
-            if (components) {
-                for (const compName in components) {
-                    reajusteConjuntoItems[compName] = (reajusteConjuntoItems[compName] || 0) + (components[compName] * parseInt(quantidade.value));
-                }
-                if (tampo.value !== 'N/A') {
-                    const tampoName = `TAMPO-${tampo.value.toUpperCase()}-${modelo.value}`;
-                    reajusteConjuntoItems[tampoName] = (reajusteConjuntoItems[tampoName] || 0) + parseInt(quantidade.value);
-                }
-
-                updateConjuntoItemsDisplay('reajuste');
-                showToast(`Conjunto ${tipo.value}-${modelo.value} (${quantidade.value}x) adicionado para reajuste.`, 'success');
-            } else {
-                showToast('Configuração de componentes para o CJA selecionada não encontrada.', 'error');
-            }
-        });
-
-        document.getElementById('add-saida-conjunto-button').addEventListener('click', () => {
-            const tipoCJA = document.getElementById('saidaConjuntoTipoCJA');
-            const modeloCJA = document.getElementById('saidaConjuntoModeloCJA');
-            const tampoTipo = document.getElementById('saidaConjuntoTampo');
-            const quantidade = document.getElementById('saidaConjuntoQuantidade');
-
-            let isValid = true;
-            isValid = validateField(tipoCJA, document.getElementById('saidaConjuntoTipoCJA-validation')) && isValid;
-            isValid = validateField(modeloCJA, document.getElementById('saidaConjuntoModeloCJA-validation')) && isValid;
-            isValid = validateField(tampoTipo, document.getElementById('saidaConjuntoTampo-validation')) && isValid;
-            isValid = validateField(quantidade, document.getElementById('saidaConjuntoQuantidade-validation')) && isValid;
-
-            if (!isValid) {
-                showToast('Por favor, preencha todos os campos obrigatórios para o conjunto.', 'error');
-                return;
-            }
-
-            const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipoCJA.value}-${modeloCJA.value}-${tampoTipo.value}`; 
-
-            saidaConjuntoItems[modeloCompleto] = (saidaConjuntoItems[modeloCompleto] || 0) + parseInt(quantidade.value);
-
-            updateConjuntoItemsDisplay('saida');
-            showToast(`Conjunto '${modeloCompleto}' (${quantidade.value}x) adicionado para saída.`, 'success');
-        });
-
-
-        document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
-            addManualItem('reajusteAvulsaItemsContainer', 'reajuste');
-        });
-
-        document.getElementById('add-saida-item-button').addEventListener('click', () => {
-            addManualItem('saidaManualItemsContainer', 'saida');
-        });
-
-
-        document.getElementById('formReajusteEstoque').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formReajusteEstoque')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-
-            const formData = new FormData(event.target);
-            const items = [];
-            const tipoOperacao = formData.get('tipo_operacao'); 
-            let endpoint = '';
-            let successMessage = '';
-
-            if (tipoOperacao === 'adicionar') {
-                endpoint = '/processar_entrada_manual';
-                successMessage = "Entrada manual registrada com sucesso!";
-            } else if (tipoOperacao === 'retirar') {
-                endpoint = '/processar_entrada_manual'; 
-                successMessage = "Retirada manual registrada com sucesso!";
-            } else {
-                showToast("Por favor, selecione o tipo de operação (Adicionar ou Retirar).", 'error');
-                return;
-            }
-
-            for (const compName in reajusteConjuntoItems) {
-                let quantity = reajusteConjuntoItems[compName];
-                if (tipoOperacao === 'retirar') {
-                    quantity = -quantity; 
-                }
-                let tampoType = 'N/A';
-                if (compName.startsWith('TAMPO-')) {
-                    const parts = compName.split('-');
-                    if (parts.length >= 3) {
-                        tampoType = parts[1]; 
-                    }
-                }
-                items.push({ componente: compName, quantidade: quantity, tampo: tampoType }); 
-            }
-
-            const avulsaInputs = document.querySelectorAll('#reajusteAvulsaItemsContainer .flex.items-end');
-            avulsaInputs.forEach(itemDiv => {
-                const componenteSelect = itemDiv.querySelector('select');
-                const quantidadeInput = itemDiv.querySelector('input[type="number"]');
-                const componente = componenteSelect.value;
-                let quantidade = parseInt(quantidadeInput.value) || 0;
-                if (componente && quantidade > 0) {
-                    if (tipoOperacao === 'retirar') {
-                        quantidade = -quantidade; 
-                    }
-                    let tampoType = 'N/A';
-                    if (componente.startsWith('TAMPO-')) {
-                        const parts = componente.split('-');
-                        if (parts.length >= 3) {
-                            tampoType = parts[1]; 
-                        }
-                    }
-                    items.push({ componente: componente, quantidade: quantity, tampo: tampoType });
-                }
-            });
-
-            if (items.length === 0) {
-                showToast("Por favor, adicione pelo menos um item para registrar o reajuste.", 'error');
-                return;
-            }
-
-            const data = {
-                tipo_entrada: tipoOperacao === 'adicionar' ? 'ajuste-entrada' : 'ajuste-saida', 
-                descricao: formData.get('descricao') || `Reajuste: ${tipoOperacao}`, 
-                itens: items
-            };
-
-            const result = await postData(endpoint, data); 
-            if (result) {
-                showToast(successMessage, 'success');
-                document.getElementById('formReajusteEstoque').reset();
-                reajusteConjuntoItems = {};
-                reajusteAvulsaItems = [];
-                updateConjuntoItemsDisplay('reajuste');
-                updateAvulsaItemsDisplay('reajuste');
-                document.getElementById('reajusteDescricaoContainer').classList.add('hidden');
-
-                loadMovimentacoes(); 
-                loadEstoque(); 
-                loadDashboardData(); 
-            }
-        });
-
-        document.getElementById('formSaidaManual').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formSaidaManual')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-
-            const formData = new FormData(event.target);
-            const items = [];
-
-            const tipoCJA = formData.get('tipo_cja');
-            const modeloCJA = formData.get('modelo_cja');
-            const tampoTipo = formData.get('tampo_tipo');
-            const quantidade = parseInt(formData.get('quantidade')) || 0;
-
-            if (tipoCJA && modeloCJA && tampoTipo && quantidade > 0) {
-                const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipoCJA}-${modeloCJA}-${tampoTipo}`; 
-                items.push({ modelo: modeloCompleto, quantidade: quantidade, tampo: tampoTipo });
-            }
-
-            const avulsaInputs = document.querySelectorAll('#saidaManualItemsContainer .flex.items-end');
-            avulsaInputs.forEach(itemDiv => {
-                const componenteSelect = itemDiv.querySelector('select');
-                const quantidadeInput = itemDiv.querySelector('input[type="number"]');
-                const componente = componenteSelect.value;
-                const quantidadeAvulsa = parseInt(quantidadeInput.value) || 0;
-                if (componente && quantidadeAvulsa > 0) {
-                    let tampoType = 'N/A';
-                    if (componente.startsWith('TAMPO-')) {
-                        const parts = componente.split('-');
-                        if (parts.length >= 3) {
-                            tampoType = parts[1]; 
-                        }
-                    }
-                    items.push({ modelo: componente, quantidade: quantidadeAvulsa, tampo: tampoType });
-                }
-            });
-            
-            if (items.length === 0) {
-                showToast("Por favor, adicione pelo menos um item para registrar a saída.", 'error');
-                return;
-            }
-
-            const data = {
-                os_number: formData.get('os_number'),
-                cidade_destino: formData.get('cidade_destino'),
-                data_emissao: formData.get('data_emissao'),
-                prazo_entrega: formData.get('prazo_entrega'),
-                itens: items
-            };
-
-            const result = await postData('/processar_pedido_manual', data); 
-            if (result) {
-                showToast("Saída manual registrada com sucesso!", 'success');
-                window.closeModal('saidaManualModal'); 
-                loadMovimentacoes(); 
-                loadEstoque(); 
-                loadDashboardData(); 
-            }
-        });
-
-        document.getElementById('formAddConjuntosProntosLocal').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formAddConjuntosProntosLocal')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-            const formData = new FormData(event.target);
-
-            const tipoCJA = formData.get('tipo_cja');
-            const modeloCJA = formData.get('modelo_cja');
-            const tampoTipo = formData.get('tampo_tipo');
-            const quantidade = parseInt(formData.get('quantidade')) || 0;
-
-            if (quantidade <= 0) {
-                showToast('A quantidade de conjuntos deve ser maior que zero.', 'error');
-                return;
-            }
-            if (!tipoCJA || !modeloCJA || !tampoTipo) {
-                showToast('Por favor, selecione o tipo CJA, modelo CJA e o tipo de tampo.', 'error');
-                return;
-            }
-
-            const data = {
-                tipo_cja: tipoCJA,
-                modelo_cja: modeloCJA,
-                tampo_tipo: tampoTipo,
-                quantidade: quantidade,
-                destino_estoque: 'local'
-            };
-
-            const result = await postData('/add_conjuntos_prontos', data);
-            if (result) {
-                showToast(result.message, 'success');
-                document.getElementById('formAddConjuntosProntosLocal').reset(); 
-                loadEstoque(); 
-                loadMovimentacoes(); 
-                loadDashboardData();
-            }
-        });
-
-        document.getElementById('formRetirarConjuntosProntosLocal').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formRetirarConjuntosProntosLocal')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-            const formData = new FormData(event.target);
-
-            const tipoCJA = formData.get('tipo_cja');
-            const modeloCJA = formData.get('modelo_cja');
-            const tampoTipo = formData.get('tampo_tipo');
-            const quantidade = parseInt(formData.get('quantidade')) || 0;
-
-            if (quantidade <= 0) {
-                showToast('A quantidade de conjuntos deve ser maior que zero.', 'error');
-                return;
-            }
-            if (!tipoCJA || !modeloCJA || !tampoTipo) {
-                showToast('Por favor, selecione o tipo CJA, modelo CJA e o tipo de tampo.', 'error');
-                return;
-            }
-
-            const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipoCJA}-${modeloCJA}-${tampoTipo}`;
-
-            const data = {
-                os_number: `RETIRADA-LOCAL-${Date.now()}`, 
-                cidade_destino: 'Estoque Local',
-                data_emissao: new Date().toISOString().split('T')[0],
-                prazo_entrega: new Date().toISOString().split('T')[0],
-                itens: [{ modelo: modeloCompleto, quantidade: quantidade }]
-            };
-
-            const result = await postData('/processar_pedido_manual', data); 
-            if (result) {
-                showToast(`Retirada de ${quantidade} conjuntos '${modeloCompleto}' do estoque local registrada com sucesso!`, 'success');
-                document.getElementById('formRetirarConjuntosProntosLocal').reset(); 
-                loadEstoque(); 
-                loadMovimentacoes(); 
-                loadDashboardData();
-            }
-        });
-
-
-        document.getElementById('formAddConjuntosProntosDistrito').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formAddConjuntosProntosDistrito')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-            const formData = new FormData(event.target);
-
-            const tipoCJA = formData.get('tipo_cja');
-            const modeloCJA = formData.get('modelo_cja');
-            const tampoTipo = formData.get('tampo_tipo');
-            const quantidade = parseInt(formData.get('quantidade')) || 0;
-
-            if (quantidade <= 0) {
-                showToast('A quantidade de conjuntos deve ser maior que zero.', 'error');
-                return;
-            }
-            if (!tipoCJA || !modeloCJA || !tampoTipo) {
-                showToast('Por favor, selecione o tipo CJA, modelo CJA e o tipo de tampo.', 'error');
-                return;
-            }
-
-            const data = {
-                tipo_cja: tipoCJA,
-                modelo_cja: modeloCJA,
-                tampo_tipo: tampoTipo,
-                quantidade: quantidade,
-                destino_estoque: 'distrito'
-            };
-
-            const result = await postData('/add_conjuntos_prontos', data);
-            if (result) {
-                showToast(result.message, 'success');
-                document.getElementById('formAddConjuntosProntosDistrito').reset(); 
-                loadEstoque(); 
-                loadMovimentacoes(); 
-                loadDashboardData();
-            }
-        });
-
-        document.getElementById('formRetirarConjuntosProntosDistrito').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!validateForm('formRetirarConjuntosProntosDistrito')) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
-            const formData = new FormData(event.target);
-
-            const tipoCJA = formData.get('tipo_cja');
-            const modeloCJA = formData.get('modelo_cja');
-            const tampoTipo = formData.get('tampo_tipo');
-            const quantidade = parseInt(formData.get('quantidade')) || 0;
-
-            if (quantidade <= 0) {
-                showToast('A quantidade de conjuntos deve ser maior que zero.', 'error');
-                return;
-            }
-            if (!tipoCJA || !modeloCJA || !tampoTipo) {
-                showToast('Por favor, selecione o tipo CJA, modelo CJA e o tipo de tampo.', 'error');
-                return;
-            }
-
-            const modeloCompleto = `CONJUNTO-PRONTO-DISTRITO-${tipoCJA}-${modeloCJA}-${tampoTipo}`;
-
-            const data = {
-                os_number: `RETIRADA-DISTRITO-${Date.now()}`, 
-                cidade_destino: 'Estoque Distrito',
-                data_emissao: new Date().toISOString().split('T')[0],
-                prazo_entrega: new Date().toISOString().split('T')[0],
-                itens: [{ modelo: modeloCompleto, quantidade: quantidade }]
-            };
-
-            const result = await postData('/processar_pedido_manual', data); 
-            if (result) {
-                showToast(`Retirada de ${quantidade} conjuntos '${modeloCompleto}' do estoque distrito registrada com sucesso!`, 'success');
-                document.getElementById('formRetirarConjuntosProntosDistrito').reset(); 
-                loadEstoque(); 
-                loadMovimentacoes(); 
-                loadDashboardData();
-            }
-        });
-
-
         function populateProducaoMinima(estoqueData) {
-            const producaoMinimaTableBody = document.getElementById('table-producao-minima');
+            const producaoMinimaTableBody = document.getElementById('producao-minima-table-body');
             const noProducaoMinimaData = document.getElementById('no-producao-minima-data');
-            if (!producaoMinimaTableBody || !producaoMinimaTableBody.getElementsByTagName('tbody')[0]) {
-                console.error('Elemento #table-producao-minima ou seu tbody não encontrado.');
+            if (!producaoMinimaTableBody) { // Verifica se o tbody existe, não o elemento pai
+                console.error('Elemento #producao-minima-table-body não encontrado.');
                 return;
             }
-            const tbody = producaoMinimaTableBody.getElementsByTagName('tbody')[0];
-            tbody.innerHTML = '';
+            producaoMinimaTableBody.innerHTML = '';
             let hasProducaoMinima = false;
             currentProducaoMinimaData = []; 
 
@@ -3055,7 +2880,7 @@
             });
 
             const cjaModels = CJA_MODELS; 
-            const tampoTypes = ['MDF', 'PLASTICO']; 
+            const tampoTypes = ['MDF', 'PLASTICO']; // Apenas MDF e PLASTICO para produção mínima
 
             cjaModels.forEach(model => {
                 const rowData = {
@@ -3077,34 +2902,30 @@
                     if (tampoType === 'MDF') {
                         relevantTampoQty = stockMap[`TAMPO-MDF-${model}`] || 0;
                     } else if (tampoType === 'PLASTICO') {
+                        // Considera tanto PLASTICO quanto MASTICMOL como "tampão plástico" para produção
                         relevantTampoQty = (stockMap[`TAMPO-PLASTICO-${model}`] || 0) + (stockMap[`TAMPO-MASTICMOL-${model}`] || 0);
                     }
 
+                    // Calcula a produção mínima para cada tipo de CJA (Zurich e Masticmol)
+                    // e pega o mínimo entre eles, considerando os componentes comuns e o tampo específico.
+                    let minForZurich = 0;
                     const assentoZurichQty = stockMap[`ASSENTO-ZURICH-${model}`] || 0;
                     const encostoZurichQty = stockMap[`ENCOSTO-ZURICH-${model}`] || 0;
-                    
+                    if (assentoZurichQty > 0 && encostoZurichQty > 0 && portaLivroQty > 0 && relevantTampoQty > 0) {
+                        minForZurich = Math.min(assentoZurichQty, encostoZurichQty, portaLivroQty, relevantTampoQty);
+                    }
+
+                    let minForMasticmol = 0;
                     const assentoMasticmolQty = stockMap[`ASSENTO-MASTICMOL-${model}`] || 0;
                     const encostoMasticmolQty = stockMap[`ENCOSTO-MASTICMOL-${model}`] || 0;
-
-                    const minAssentoEncostoZurich = Math.min(assentoZurichQty, encostoZurichQty);
-                    const minAssentoEncostoMasticmol = Math.min(assentoMasticmolQty, encostoMasticmolQty);
-
-                    if (minAssentoEncostoZurich > 0 && portaLivroQty > 0 && relevantTampoQty > 0) {
-                        minProductionForTampoType = Math.min(minProductionForTampoType, minAssentoEncostoZurich, portaLivroQty, relevantTampoQty);
-                    } else {
-                        minProductionForTampoType = Math.min(minProductionForTampoType, 0); 
+                    if (assentoMasticmolQty > 0 && encostoMasticmolQty > 0 && portaLivroQty > 0 && relevantTampoQty > 0) {
+                        minForMasticmol = Math.min(assentoMasticmolQty, encostoMasticmolQty, portaLivroQty, relevantTampoQty);
                     }
 
-                    if (minAssentoEncostoMasticmol > 0 && portaLivroQty > 0 && relevantTampoQty > 0) {
-                        minProductionForTampoType = Math.min(minProductionForTampoType, minAssentoEncostoMasticmol, portaLivroQty, relevantTampoQty);
-                    } else {
-                        minProductionForTampoType = Math.min(minProductionForTampoType, 0); 
-                    }
+                    // Se ambos os tipos de CJA podem ser produzidos, pega o maior entre eles
+                    // Se apenas um pode, pega o valor desse um. Se nenhum, é 0.
+                    minProductionForTampoType = Math.max(minForZurich, minForMasticmol);
                     
-                    if (minProductionForTampoType === Infinity) {
-                        minProductionForTampoType = 0;
-                    }
-
                     rowHtml += `<td class="py-3 px-6 text-left">${minProductionForTampoType}</td>`;
                     if (tampoType === 'MDF') {
                         rowData.mdf = minProductionForTampoType;
@@ -3117,7 +2938,7 @@
                 });
 
                 row.innerHTML = rowHtml;
-                tbody.appendChild(row);
+                producaoMinimaTableBody.appendChild(row);
                 currentProducaoMinimaData.push(rowData);
             });
 
@@ -3229,7 +3050,7 @@
         }
 
         // Função para renderizar o gráfico de produção por CJA e Tampo
-        window.updateCJAProductionChart = async function(period, triggeredByUser = false) {
+        async function updateCJAProductionChart(period, triggeredByUser = false) {
             const selectedCJA = document.getElementById('selectCJA').value;
             const selectedTampo = document.getElementById('selectTampo').value;
             const noDataMessage = document.getElementById('no-cja-production-chart-data');
@@ -3277,11 +3098,21 @@
                 let dateA, dateB;
 
                 if (period === 'weekly') {
-                    dateA = new Date(`${a.split('/')[1]} ${a.split('/')[0]}, ${year}`);
-                    dateB = new Date(`${b.split('/')[1]} ${b.split('/')[0]}, ${year}`);
+                    // Formato "Semana X/YY"
+                    const [weekA, yearA] = a.split('/').map(s => parseInt(s));
+                    const [weekB, yearB] = b.split('/').map(s => parseInt(s));
+                    // Aproximação: cria uma data para o meio da semana
+                    dateA = new Date(yearA, 0, 1 + (weekA - 1) * 7 + 3);
+                    dateB = new Date(yearB, 0, 1 + (weekB - 1) * 7 + 3);
                 } else { 
-                    dateA = new Date(`01 ${a.split('/')[0]} 20${a.split('/')[1]}`);
-                    dateB = new Date(`01 ${b.split('/')[0]} 20${b.split('/')[1]}`);
+                    // Formato "MMM/AA"
+                    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                    const [monthStrA, yearStrA] = a.split('/');
+                    const [monthStrB, yearStrB] = b.split('/');
+                    const monthIndexA = monthNames.indexOf(monthStrA);
+                    const monthIndexB = monthNames.indexOf(monthStrB);
+                    dateA = new Date(`20${yearStrA}`, monthIndexA, 1);
+                    dateB = new Date(`20${yearStrB}`, monthIndexB, 1);
                 }
                 return dateA - dateB;
             });
@@ -3345,7 +3176,7 @@
         }
 
 
-        window.loadUsers = async function() { 
+        async function loadUsers() { 
             const usersData = await fetchData('/users');
             if (usersData) {
                 currentUsersData = usersData; 
@@ -3368,7 +3199,7 @@
                         <td class="py-3 px-6 text-left">${user.role || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
                             ${user.username !== currentUser.username ? 
-                                `<button onclick="window.confirmAction('Tem certeza que deseja deletar o usuário \\'${user.username}\\'?', () => window.deleteUser('${user.username}'))" class="text-red-500 hover:underline">Deletar</button>` 
+                                `<button onclick="confirmAction('Tem certeza que deseja deletar o usuário \\'${user.username}\\'?', () => deleteUser('${user.username}'))" class="text-red-500 hover:underline">Deletar</button>` 
                                 : '<span class="text-gray-400">Você</span>'}
                         </td>
                     `;
@@ -3380,7 +3211,7 @@
             }
         }
 
-        window.createUser = async function() { 
+        async function createUser() { 
             const form = document.getElementById('formCreateUser');
             if (!validateForm('formCreateUser')) {
                 showToast('Por favor, corrija os erros no formulário.', 'error');
@@ -3395,15 +3226,15 @@
             if (result) {
                 showToast(result.message, 'success');
                 form.reset();
-                window.loadUsers(); 
+                loadUsers(); 
             }
         }
 
-        window.deleteUser = async function(username) { 
+        async function deleteUser(username) { 
             const result = await deleteData(`/delete_user/${username}`);
             if (result) {
                 showToast(result.message, 'success');
-                window.loadUsers(); 
+                loadUsers(); 
             }
         }
 
@@ -3455,7 +3286,7 @@
         }
 
         // Funções para Pedidos Pendentes (APENAS VISUALIZAÇÃO E ATUALIZAÇÃO DE STATUS)
-        window.loadPendingOrders = async function() {
+        async function loadPendingOrders() {
             const pendingOrdersData = await fetchData('/pending_orders');
             if (pendingOrdersData) {
                 currentPendingOrdersData = pendingOrdersData;
@@ -3497,12 +3328,13 @@
                         <td class="py-3 px-6 text-left">${updatedDate}</td>
                         <td class="py-3 px-6 text-left">${order.updated_by || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
-                            <select onchange="window.updatePendingOrderStatus('${order.id}', this.value)" class="select-field text-sm p-1">
+                            <select onchange="updatePendingOrderStatus('${order.id}', this.value)" class="select-field text-sm p-1">
                                 <option value="">Mudar Status</option>
                                 <option value="Pendente" ${order.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
                                 <option value="Produzindo" ${order.status === 'Produzindo' ? 'selected' : ''}>Produzindo</option>
                                 <option value="Feito" ${order.status === 'Feito' ? 'selected' : ''}>Feito</option>
                             </select>
+                            <button onclick="confirmAction('Tem certeza que deseja deletar este pedido pendente?', () => deletePedidoPendente('${order.id}'))" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs ml-2"><i class="fas fa-trash"></i> Deletar</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -3513,10 +3345,21 @@
             }
         }
 
-        window.updatePendingOrderStatus = async function(orderId, newStatus) {
+        async function deletePedidoPendente(id) {
+            const result = await deleteData(`/pedidos_pendentes/${id}`);
+            if (result) {
+                showToast(result.message, 'success');
+                loadPendingOrders();
+                loadEstoque();
+                loadMovimentacoes();
+                loadDashboardData();
+            }
+        }
+
+        async function updatePendingOrderStatus(orderId, newStatus) {
             if (!newStatus) return; 
 
-            window.confirmAction(`Tem certeza que deseja mudar o status deste pedido para '${newStatus}'?`, async () => {
+            confirmAction(`Tem certeza que deseja mudar o status deste pedido para '${newStatus}'?`, async () => {
                 const data = { status: newStatus };
                 const result = await putData(`/pending_orders/${orderId}`, data);
                 if (result) {
@@ -3527,58 +3370,85 @@
                     loadDashboardData(); 
                 }
             });
-        };
+        }
 
-
-        let confirmActionCallback = null;
-
-        window.confirmAction = function(message, callback) {
+        function confirmAction(message, callback) {
             document.getElementById('confirmModalMessage').textContent = message;
-            document.getElementById('customConfirmModal').classList.add('active');
+            document.getElementById('customConfirmModal').classList.add('open'); // Usa 'open' para o modal-overlay
+            document.getElementById('customConfirmModal').classList.remove('hidden');
             confirmActionCallback = callback;
-        };
+        }
 
-        document.getElementById('confirmModalConfirm').addEventListener('click', () => {
-            document.getElementById('customConfirmModal').classList.remove('active');
-            if (confirmActionCallback) {
-                confirmActionCallback();
-                confirmActionCallback = null; 
+        // Função de Paginação Genérica
+        function renderPagination(containerId, totalPages, currentPage, fetchFunction) {
+            const paginationContainer = document.getElementById(containerId);
+            paginationContainer.innerHTML = ''; // Limpa a paginação anterior
+
+            if (totalPages <= 1) return; // Não precisa de paginação para 1 ou menos páginas
+
+            const createButton = (text, page, isActive = false) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.classList.add('px-2', 'py-1', 'mx-1', 'rounded-md', 'focus:outline-none', 'text-sm'); /* Tamanho menor */
+                if (isActive) {
+                    button.classList.add('bg-blue-500', 'text-white');
+                } else {
+                    button.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                }
+                button.addEventListener('click', () => fetchFunction(page));
+                return button;
+            };
+
+            // Botão "Anterior"
+            if (currentPage > 1) {
+                paginationContainer.appendChild(createButton('Anterior', currentPage - 1));
             }
-        });
 
-        document.getElementById('confirmModalCancel').addEventListener('click', () => {
-            document.getElementById('customConfirmModal').classList.remove('active');
-            confirmActionCallback = null; 
-        });
+            // Números das páginas
+            const maxPageButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+            if (endPage - startPage + 1 < maxPageButtons) {
+                startPage = Math.max(1, endPage - maxPageButtons + 1);
+            }
+
+            if (startPage > 1) {
+                paginationContainer.appendChild(createButton('1', 1));
+                if (startPage > 2) {
+                    const span = document.createElement('span');
+                    span.textContent = '...';
+                    span.classList.add('mx-1', 'text-gray-600', 'text-sm');
+                    paginationContainer.appendChild(span);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationContainer.appendChild(createButton(i.toString(), i, i === currentPage));
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const span = document.createElement('span');
+                    span.textContent = '...';
+                    span.classList.add('mx-1', 'text-gray-600', 'text-sm');
+                    paginationContainer.appendChild(span);
+                }
+                paginationContainer.appendChild(createButton(totalPages.toString(), totalPages));
+            }
+
+            // Botão "Próximo"
+            if (currentPage < totalPages) {
+                paginationContainer.appendChild(createButton('Próximo', currentPage + 1));
+            }
+        }
 
 
+        // --- Event Listeners e Inicialização (dentro do DOMContentLoaded) ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM completamente carregado. Configurando event listeners.");
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    const idTokenResult = await user.getIdTokenResult();
-                    currentUser.token = idTokenResult.token;
-                    currentUser.username = user.displayName || user.email.split('@')[0];
-                    currentUser.role = idTokenResult.claims.role || 'visualizador';
-                    currentUser.firebaseUser = user;
-
-                    showMainContent();
-                    updateLoggedInUserDisplay();
-                    checkUserRoleAccess();
-                    window.showSection('dashboard'); 
-                } else {
-                    currentUser.token = null;
-                    currentUser.username = null;
-                    currentUser.role = null;
-                    currentUser.firebaseUser = null;
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('role');
-                    showLoginScreen();
-                }
-            });
-
+            // Event listener para o botão de login
             document.getElementById('login-form')?.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 if (!validateForm('login-form')) {
@@ -3590,10 +3460,12 @@
                 await login(username, password);
             });
 
+            // Event listener para o botão de logout
             document.getElementById('nav-logout')?.addEventListener('click', logout);
 
+            // Event listener para o botão de inicializar dados (apenas para teste)
             document.getElementById('initialize-data-button')?.addEventListener('click', async () => {
-                window.confirmAction('Isso apagará TODOS os dados de estoque, movimentações e usuários e criará os usuários padrão. Tem certeza?', async () => {
+                confirmAction('Isso apagará TODOS os dados de estoque, movimentações e usuários e criará os usuários padrão. Tem certeza?', async () => {
                     showLoading();
                     try {
                         const response = await fetch(`${API_BASE_URL}/initialize_data`, { method: 'POST' });
@@ -3613,9 +3485,72 @@
                 });
             });
 
+            // Event listener para o toggle da sidebar (mobile)
+            document.getElementById('sidebar-toggle-button')?.addEventListener('click', toggleSidebar);
 
-            document.getElementById('sidebar-toggle-button')?.addEventListener('click', window.toggleSidebar);
+            // Event listener para os links da sidebar
+            document.querySelectorAll('aside nav ul li a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.id.replace('link', '') + '-view'; // Converte linkDashboard para dashboard-view
+                    showSection(targetId);
+                    // Fecha a sidebar em mobile após clicar no link
+                    if (window.innerWidth < 768) {
+                        const sidebar = document.getElementById('sidebar');
+                        const mainContent = document.getElementById('main-content-wrapper');
+                        sidebar.classList.remove('open');
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.remove('expanded');
+                    }
+                });
+            });
 
+            // Lidar com o recolhimento/expansão da sidebar ao redimensionar a janela (desktop)
+            window.addEventListener('resize', () => {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content-wrapper');
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('open'); // Garante que a classe 'open' do mobile seja removida
+                    sidebar.classList.remove('collapsed'); // Estado padrão no desktop
+                    mainContent.classList.remove('expanded'); // Estado padrão no desktop
+                } else {
+                    sidebar.classList.remove('open'); // Começa colapsada no mobile
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.remove('expanded');
+                }
+            });
+            // Verificação inicial do estado da sidebar ao carregar
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.add('collapsed');
+                }
+            }
+
+
+            // Event listener para o modal de Produção Mínima
+            const producaoMinimaModal = document.getElementById('producaoMinimaModal');
+            const openProducaoMinimaModalLink = document.getElementById('openProducaoMinimaModalLink');
+            const closeProducaoMinimaModal = document.getElementById('closeProducaoMinimaModal');
+
+            openProducaoMinimaModalLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                populateProducaoMinima(currentEstoqueData); // Usa os dados reais do estoque
+                openModal('producaoMinimaModal');
+            });
+
+            closeProducaoMinimaModal.addEventListener('click', () => {
+                closeModal('producaoMinimaModal');
+            });
+
+            // Fechar modal clicando fora (opcional)
+            producaoMinimaModal.addEventListener('click', (e) => {
+                if (e.target === producaoMinimaModal) {
+                    closeModal('producaoMinimaModal');
+                }
+            });
+
+            // Event listener para o formulário de Reajuste de Estoque
             document.getElementById('reajusteTipoOperacao')?.addEventListener('change', function() {
                 const descricaoContainer = document.getElementById('reajusteDescricaoContainer');
                 const descricaoInput = document.getElementById('reajusteDescricao');
@@ -3633,12 +3568,13 @@
                 }
             });
 
-
+            // Event listeners para os seletores de conjunto no Reajuste
             document.getElementById('reajusteConjuntoTipo').addEventListener('change', () => generateConjuntoItems('reajuste'));
             document.getElementById('reajusteConjuntoModelo').addEventListener('change', () => generateConjuntoItems('reajuste'));
             document.getElementById('reajusteConjuntoQuantidade').addEventListener('input', () => generateConjuntoItems('reajuste'));
             document.getElementById('reajusteConjuntoTampo').addEventListener('change', () => generateConjuntoItems('reajuste')); 
 
+            // Popula dropdowns para formulários de adicionar/retirar conjuntos
             populateCJATypesDropdown('addConjuntosTipoCJALocal', CJA_TYPES);
             populateCJAModelsDropdown('addConjuntosModeloCJALocal', CJA_MODELS);
             populateTampoTypesDropdown('addConjuntosTampoTipoLocal', TAMPO_TYPES);
@@ -3660,30 +3596,96 @@
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
 
             // Event listeners para o novo gráfico de produção CJA
-            document.getElementById('selectCJA').addEventListener('change', () => window.updateCJAProductionChart('weekly', true)); 
-            document.getElementById('selectTampo').addEventListener('change', () => window.updateCJAProductionChart('weekly', true)); 
+            document.getElementById('selectCJA').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
+            document.getElementById('selectTampo').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
 
-            // NOVO: Removido add-pending-item-button e formCreatePendingOrder
-            // populateCJATypesDropdown('pendingItemTipoCJA', CJA_TYPES);
-            // populateCJAModelsDropdown('pendingItemModeloCJA', CJA_MODELS);
-            // populateTampoTypesDropdown('pendingItemTampoTipo', TAMPO_TYPES);
+            // Event listeners para os botões de adicionar conjunto/item avulso
+            document.getElementById('add-reajuste-conjunto-button').addEventListener('click', () => {
+                const tipo = document.getElementById('reajusteConjuntoTipo');
+                const modelo = document.getElementById('reajusteConjuntoModelo');
+                const quantidade = document.getElementById('reajusteConjuntoQuantidade');
+                const tampo = document.getElementById('reajusteConjuntoTampo');
 
+                let isValid = true;
+                isValid = validateField(tipo, document.getElementById('reajusteConjuntoTipo-validation')) && isValid;
+                isValid = validateField(modelo, document.getElementById('reajusteConjuntoModelo-validation')) && isValid;
+                isValid = validateField(quantidade, document.getElementById('reajusteConjuntoQuantidade-validation')) && isValid;
+                isValid = validateField(tampo, document.getElementById('reajusteConjuntoTampo-validation')) && isValid;
 
-            document.getElementById('card-monthly-movements')?.addEventListener('click', () => window.toggleVisibility('monthly-movements-details-wrapper'));
-            document.getElementById('card-weekly-movements')?.addEventListener('click', () => window.toggleVisibility('weekly-movements-details-wrapper'));
-            document.getElementById('card-low-stock')?.addEventListener('click', () => window.toggleVisibility('low-stock-details-wrapper'));
-            document.getElementById('card-producao-minima')?.addEventListener('click', () => window.toggleVisibility('producao-minima-details-wrapper'));
+                if (!isValid) {
+                    showToast('Por favor, preencha todos os campos obrigatórios para o conjunto.', 'error');
+                    return;
+                }
 
+                const components = CJA_COMPONENT_MAP[tipo.value]?.[modelo.value];
+                if (components) {
+                    for (const compName in components) {
+                        reajusteConjuntoItems[compName] = (reajusteConjuntoItems[compName] || 0) + (components[compName] * parseInt(quantidade.value));
+                    }
+                    if (tampo.value !== 'N/A') {
+                        const tampoName = `TAMPO-${tampo.value.toUpperCase()}-${modelo.value}`;
+                        reajusteConjuntoItems[tampoName] = (reajusteConjuntoItems[tampoName] || 0) + parseInt(quantidade.value);
+                    }
 
-            document.getElementById('tab-saidas')?.addEventListener('click', (event) => window.showMovementType('saidas', event.target));
-            document.getElementById('tab-entradas')?.addEventListener('click', (event) => window.showMovementType('entradas', event.target));
-            document.getElementById('tab-producao')?.addEventListener('click', (event) => window.showMovementType('producao', event.target)); 
-        
-            document.getElementById('formCreateUser')?.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                await window.createUser();
+                    updateConjuntoItemsDisplay('reajuste');
+                    showToast(`Conjunto ${tipo.value}-${modelo.value} (${quantidade.value}x) adicionado para reajuste.`, 'success');
+                } else {
+                    showToast('Configuração de componentes para o CJA selecionada não encontrada.', 'error');
+                }
             });
 
+            document.getElementById('add-saida-conjunto-button').addEventListener('click', () => {
+                const tipoCJA = document.getElementById('saidaConjuntoTipoCJA');
+                const modeloCJA = document.getElementById('saidaConjuntoModeloCJA');
+                const tampoTipo = document.getElementById('saidaConjuntoTampo');
+                const quantidade = document.getElementById('saidaConjuntoQuantidade');
+
+                let isValid = true;
+                isValid = validateField(tipoCJA, document.getElementById('saidaConjuntoTipoCJA-validation')) && isValid;
+                isValid = validateField(modeloCJA, document.getElementById('saidaConjuntoModeloCJA-validation')) && isValid;
+                isValid = validateField(tampoTipo, document.getElementById('saidaConjuntoTampo-validation')) && isValid;
+                isValid = validateField(quantidade, document.getElementById('saidaConjuntoQuantidade-validation')) && isValid;
+
+                if (!isValid) {
+                    showToast('Por favor, preencha todos os campos obrigatórios para o conjunto.', 'error');
+                    return;
+                }
+
+                const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipoCJA.value}-${modeloCJA.value}-${tampoTipo.value}`; 
+
+                saidaConjuntoItems[modeloCompleto] = (saidaConjuntoItems[modeloCompleto] || 0) + parseInt(quantidade.value);
+
+                updateConjuntoItemsDisplay('saida');
+                showToast(`Conjunto '${modeloCompleto}' (${quantidade.value}x) adicionado para saída.`, 'success');
+            });
+
+            document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
+                addManualItem('reajusteAvulsaItemsContainer', 'reajuste');
+            });
+
+            document.getElementById('add-saida-item-button').addEventListener('click', () => {
+                addManualItem('saidaManualItemsContainer', 'saida');
+            });
+
+
+            // Event listeners para os cards do dashboard
+            document.getElementById('card-monthly-movements')?.addEventListener('click', () => toggleVisibility('monthly-movements-details-wrapper'));
+            document.getElementById('card-weekly-movements')?.addEventListener('click', () => toggleVisibility('weekly-movements-details-wrapper'));
+            document.getElementById('card-low-stock')?.addEventListener('click', () => toggleVisibility('low-stock-details-wrapper'));
+            document.getElementById('card-producao-minima')?.addEventListener('click', () => toggleVisibility('producao-minima-details-wrapper')); // Este card do dashboard
+
+            // Event listeners para as abas de movimentações
+            document.getElementById('tab-saidas')?.addEventListener('click', (event) => showMovementType('saidas', event.target));
+            document.getElementById('tab-entradas')?.addEventListener('click', (event) => showMovementType('entradas', event.target));
+            document.getElementById('tab-producao')?.addEventListener('click', (event) => showMovementType('producao', event.target)); 
+        
+            // Event listener para o formulário de criação de usuário
+            document.getElementById('formCreateUser')?.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                await createUser();
+            });
+
+            // Event listeners para validação de campos
             document.querySelectorAll('input, select, textarea').forEach(input => { 
                 input.addEventListener('input', (e) => {
                     const validationMessageElement = document.getElementById(`${e.target.id}-validation`);
@@ -3695,6 +3697,7 @@
                 });
             });
 
+            // Event listeners para campos de pesquisa
             document.getElementById('search-estoque-componentes')?.addEventListener('input', () => {
                 filterTable('search-estoque-componentes', currentEstoqueData, populateEstoqueTables);
             });
@@ -3714,7 +3717,7 @@
                 filterTable('search-pending-orders', currentPendingOrdersData, populatePendingOrdersTable, false, false, true);
             });
 
-
+            // Event listeners para ordenação de tabelas
             document.querySelectorAll('#table-zurich th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-zurich', currentEstoqueData.filter(item => item.modelo.includes('ZURICH') && !item.modelo.startsWith('TAMPO-')), populateEstoqueTables, header.dataset.sortKey));
             });
@@ -3741,7 +3744,6 @@
                 header.addEventListener('click', () => sortTable('table-low-stock', currentLowStockData, populateLowStockTable, header.dataset.sortKey));
             });
 
-
             document.querySelectorAll('#table-saidas th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-saidas', currentMovimentacoesData.filter(mov => mov.tipo === "Saída - Pedido"), populateMovimentacoesTable, header.dataset.sortKey));
             });
@@ -3762,6 +3764,47 @@
 
             document.querySelectorAll('#table-pending-orders th[data-sort-key]').forEach(header => { 
                 header.addEventListener('click', () => sortTable('table-pending-orders', currentPendingOrdersData, populatePendingOrdersTable, header.dataset.sortKey));
+            });
+
+            // Event listeners para os botões do modal de confirmação
+            document.getElementById('confirmModalConfirm').addEventListener('click', () => {
+                document.getElementById('customConfirmModal').classList.remove('open');
+                document.getElementById('customConfirmModal').classList.add('hidden');
+                if (confirmActionCallback) {
+                    confirmActionCallback();
+                    confirmActionCallback = null; 
+                }
+            });
+
+            document.getElementById('confirmModalCancel').addEventListener('click', () => {
+                document.getElementById('customConfirmModal').classList.remove('open');
+                document.getElementById('customConfirmModal').classList.add('hidden');
+                confirmActionCallback = null; 
+            });
+
+            // Listener para o estado de autenticação do Firebase
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const idTokenResult = await user.getIdTokenResult();
+                    currentUser.token = idTokenResult.token;
+                    currentUser.username = user.displayName || user.email.split('@')[0];
+                    currentUser.role = idTokenResult.claims.role || 'visualizador';
+                    currentUser.firebaseUser = user;
+
+                    showMainContent();
+                    updateLoggedInUserDisplay();
+                    checkUserRoleAccess();
+                    showSection('dashboard-view'); // Garante que a view inicial seja o dashboard
+                } else {
+                    currentUser.token = null;
+                    currentUser.username = null;
+                    currentUser.role = null;
+                    currentUser.firebaseUser = null;
+                    localStorage.removeItem('authToken'); // Limpa qualquer token antigo
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('role');
+                    showLoginScreen();
+                }
             });
         });
     </script>
