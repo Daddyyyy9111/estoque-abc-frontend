@@ -256,8 +256,8 @@
             background-color: #e0e7ff; /* indigo-100 */
             color: #4f46e5;
         }
-        .tab-content { display: none; }
-        .tab-content.active { display: block !important; }
+        .tab-content { display: none; } /* Default hidden */
+        .tab-content.active { display: block !important; } /* Only active is visible */
 
         /* Buttons */
         .btn-primary {
@@ -1710,13 +1710,14 @@
         function showSection(sectionId) { 
             console.log(`Função showSection chamada para: ${sectionId}`); 
 
+            // Remove a classe 'active' de todas as seções
             document.querySelectorAll('.tab-content').forEach(section => {
-                section.classList.add('hidden'); // Esconde todas as seções
+                section.classList.remove('active');
             });
             
             const targetView = document.getElementById(sectionId);
             if (targetView) {
-                targetView.classList.remove('hidden'); // Mostra a seção alvo
+                targetView.classList.add('active'); // Adiciona a classe 'active' à seção alvo
                 const displayTitles = { // Mapeamento de IDs de SEÇÃO para TÍTULOS de exibição
                     'dashboard-view': 'Dashboard',
                     'estoque-componentes-view': 'Estoque de Componentes',
@@ -3499,7 +3500,7 @@
                 if (window.innerWidth >= 768) {
                     sidebar.classList.remove('open'); // Garante que a classe 'open' do mobile seja removida
                     sidebar.classList.remove('collapsed'); // Estado padrão no desktop
-                    mainContent.classList.remove('expanded'); // Estado padrão no desktop
+                    mainContent.classList.remove('expanded');
                 } else {
                     sidebar.classList.remove('open'); // Começa colapsada no mobile
                     sidebar.classList.add('collapsed');
