@@ -472,6 +472,62 @@
             border: 2px solid #ef4444;
             background-color: #fef2f2;
         }
+
+        /* Styles for expandable movement blocks */
+        .movement-block {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e5e7eb;
+        }
+        .movement-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.1), 0 3px 6px -2px rgba(0, 0, 0, 0.08);
+        }
+        .movement-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #374151; /* gray-700 */
+        }
+        .movement-block-details {
+            margin-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+            display: none; /* Hidden by default */
+        }
+        .movement-block.expanded .movement-block-details {
+            display: block; /* Show when expanded */
+        }
+        .movement-block-details p {
+            margin-bottom: 0.5rem;
+            color: #4b5563; /* gray-600 */
+            font-size: 0.9rem;
+        }
+        .movement-block-details ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 0.75rem;
+        }
+        .movement-block-details ul li {
+            background-color: #f9fafb;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #374151;
+        }
+        .movement-block-details ul li:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -502,6 +558,22 @@
             <p class="text-red-500 text-xs mt-4">
                 *Nota: Os dados apresentados aqui são uma simulação para demonstração do frontend. A lógica de cálculo real da produção mínima, que considera apenas Tampos MDF e Plástico (ignorando Masticmol), deve ser implementada e validada no seu **backend Python** para refletir o estoque verdadeiro.*
             </p>
+        </div>
+    </div>
+
+    <!-- Modal de Movimentações do Dashboard (Mês/Semana) -->
+    <div id="dashboardMovementsModal" class="modal-overlay hidden">
+        <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
+            <button id="closeDashboardMovementsModal" class="modal-close-button">&times;</button>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-6" id="dashboardMovementsModalTitle">Detalhes das Movimentações</h3>
+            <div class="mb-4">
+                <label for="search-dashboard-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
+                <input type="text" id="search-dashboard-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
+            </div>
+            <div id="dashboard-movements-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Pedidos serão inseridos aqui em blocos -->
+            </div>
+            <p id="no-dashboard-movements-data" class="no-data mt-4">Nenhuma movimentação encontrada.</p>
         </div>
     </div>
 
@@ -718,58 +790,6 @@
                     </div>
                     <p id="no-cja-production-chart-data" class="no-data mt-4">Selecione um CJA e um Tampo para ver o gráfico de produção.</p>
                 </div>
-
-
-                <!-- Detalhes de Movimentação do Mês -->
-                <div id="monthly-movements-details-wrapper" class="hidden card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes das Movimentações do Mês</h3>
-                    <div class="mb-4">
-                        <label for="search-monthly-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
-                        <input type="text" id="search-monthly-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
-                    </div>
-                    <div class="table-container">
-                        <table id="table-monthly-movements-details">
-                            <thead>
-                                <tr>
-                                    <th data-sort-key="os_number">PEDIDO/OS</th>
-                                    <th data-sort-key="cidade_destino">CIDADE</th>
-                                    <th>CONJUNTOS PEDIDOS</th> <!-- Removed data-sort-key for this column -->
-                                    <th data-sort-key="data_emissao">DATA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dados serão inseridos aqui pelo JavaScript -->
-                            </tbody>
-                        </table>
-                        <p id="no-monthly-movements-data" class="no-data">Nenhuma movimentação do mês encontrada.</p>
-                    </div>
-                </div>
-
-                <!-- Detalhes de Movimentação da Semana -->
-                <div id="weekly-movements-details-wrapper" class="hidden card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes das Movimentações da Semana</h3>
-                    <div class="mb-4">
-                        <label for="search-weekly-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
-                        <input type="text" id="search-weekly-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
-                    </div>
-                    <div class="table-container">
-                        <table id="table-weekly-movements-details">
-                            <thead>
-                                <tr>
-                                    <th data-sort-key="os_number">PEDIDO/OS</th>
-                                    <th data-sort-key="cidade_destino">CIDADE</th>
-                                    <th>CONJUNTOS PEDIDOS</th> <!-- Removed data-sort-key for this column -->
-                                    <th data-sort-key="data_emissao">DATA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dados serão inseridos aqui pelo JavaScript -->
-                            </tbody>
-                        </table>
-                        <p id="no-weekly-movements-data" class="no-data">Nenhuma movimentação da semana encontrada.</p>
-                    </div>
-                </div>
-
             </section>
 
             <!-- Estoque de Componentes Section (Antigo Estoque Atual) -->
@@ -1382,34 +1402,6 @@
         </main>
     </div>
 
-    <!-- Modal para Detalhes da Movimentação -->
-    <div id="orderDetailsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal('orderDetailsModal')">&times;</span>
-            <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4" id="orderDetailTitle">Detalhes da Movimentação</h3>
-            <p class="text-gray-700 text-sm md:text-base mb-2"><strong>OS:</strong> <span id="modalOsNumber"></span></p>
-            <p class="text-gray-700 text-sm md:text-base mb-2"><strong>Cidade de Destino:</strong> <span id="modalCidadeDestino"></span></p>
-            <p class="text-700 text-sm md:text-base mb-2"><strong>Data de Emissão:</strong> <span id="modalDataEmissao"></span></p>
-            <p class="text-gray-700 text-sm md:text-base mb-4"><strong>Prazo de Entrega:</strong> <span id="modalPrazoEntrega"></span></p>
-            
-            <h4 class="text-lg md:text-xl font-semibold text-gray-700 mb-3">Itens do Pedido:</h4>
-            <div class="table-container">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" class="py-3 px-6">Modelo/Componente</th>
-                            <th scope="col" class="py-3 px-6">Quantidade</th>
-                            <th scope="col" class="col-span-2 py-3 px-6">Tampo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderItemsDetails">
-                        <!-- Itens do pedido serão inseridos aqui -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal para Saída Manual (mantido como modal) -->
     <div id="saidaManualModal" class="modal">
         <div class="modal-content">
@@ -1478,7 +1470,7 @@
                 </div>
 
                 <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Remover Itens Avulsos:</h4>
-                <div id="saidaManualItemsContainer">
+                <div id="saidaManualItemsContainer"> <!-- Corrected ID here -->
                     <!-- Itens avulsos serão adicionados aqui dinamicamente pelo JavaScript -->
                     <p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>
                 </div>
@@ -1564,9 +1556,8 @@
         let currentProducaoMinimaData = [];
         let currentAuditLogData = [];
         let currentPendingOrdersData = [];
-        // Novas variáveis para os dados detalhados do dashboard
-        let currentMonthlyMovementsDetailsData = [];
-        let currentWeeklyMovementsDetailsData = [];
+        // Variável para os dados de movimentações do dashboard (mês/semana)
+        let currentDashboardMovementsData = []; 
 
         // Variáveis para os gráficos
         let monthlyMovementsChartInstance = null;
@@ -1881,7 +1872,7 @@
         }
 
         // --- Funções de Pesquisa e Ordenação ---
-        function filterTable(searchInputId, dataArray, populateFunction, isMovementTable = false, isAuditLogTable = false, isPendingOrderTable = false) {
+        function filterTable(searchInputId, dataArray, populateFunction, isMovementTable = false, isAuditLogTable = false, isPendingOrderTable = false, isDashboardMovementList = false) {
             const searchTerm = document.getElementById(searchInputId).value.toLowerCase();
             let filteredData = [];
 
@@ -1901,6 +1892,12 @@
                 filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
             } else if (isPendingOrderTable) { 
                 filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
+            } else if (isDashboardMovementList) {
+                filteredData = dataArray.filter(item => {
+                    const osMatch = item.os_number && item.os_number.toLowerCase().includes(searchTerm);
+                    const cityMatch = item.cidade_destino && item.cidade_destino.toLowerCase().includes(searchTerm);
+                    return osMatch || cityMatch;
+                });
             }
             else {
                 // General filter for any table
@@ -2415,24 +2412,28 @@
                 const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
 
                 // Filter and store monthly/weekly movements
-                currentMonthlyMovementsDetailsData = movimentacoesData.filter(mov => {
+                const monthlyMovements = movimentacoesData.filter(mov => {
                     const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                    // Filter only "Saída - Pedido" for dashboard movements
                     return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneMonthAgo;
                 });
-                currentWeeklyMovementsDetailsData = movimentacoesData.filter(mov => {
+                const weeklyMovements = movimentacoesData.filter(mov => {
                     const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                    // Filter only "Saída - Pedido" for dashboard movements
                     return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneWeekAgo;
                 });
 
                 // Update dashboard counts
                 const monthlyMovementsElement = document.getElementById('monthly-movements');
-                if (monthlyMovementsElement) monthlyMovementsElement.textContent = currentMonthlyMovementsDetailsData.length;
+                if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyMovements.length;
                 const weeklyMovementsElement = document.getElementById('weekly-movements');
-                if (weeklyMovementsElement) weeklyMovementsElement.textContent = currentWeeklyMovementsDetailsData.length;
+                if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyMovements.length;
 
-                // Populate detail tables
-                populateDashboardMovementDetailsTable(currentMonthlyMovementsDetailsData, 'table-monthly-movements-details', 'no-monthly-movements-data');
-                populateDashboardMovementDetailsTable(currentWeeklyMovementsDetailsData, 'table-weekly-movements-details', 'no-weekly-movements-data');
+                // Store these for the dashboard movements modal
+                currentDashboardMovementsData = {
+                    monthly: monthlyMovements,
+                    weekly: weeklyMovements
+                };
 
                 renderMonthlyMovementsChart(movimentacoesData); 
             }
@@ -2458,94 +2459,100 @@
             }
         }
 
-        // New function to populate dashboard movement detail tables
-        function populateDashboardMovementDetailsTable(data, tableId, noDataId) {
-            const tableBodyElement = document.getElementById(tableId);
-            const noDataElement = document.getElementById(noDataId);
-            if (!tableBodyElement || !tableBodyElement.getElementsByTagName('tbody')[0]) {
-                console.error(`Elemento #${tableId} ou seu tbody não encontrado.`);
-                return;
+        // Nova função para abrir o modal de movimentações do dashboard
+        function openDashboardMovementsModal(type) {
+            const modalTitle = document.getElementById('dashboardMovementsModalTitle');
+            const searchInput = document.getElementById('search-dashboard-movements');
+            const listContainer = document.getElementById('dashboard-movements-list');
+            const noDataMessage = document.getElementById('no-dashboard-movements-data');
+
+            let dataToDisplay = [];
+            if (type === 'monthly') {
+                modalTitle.textContent = 'Movimentações do Mês';
+                dataToDisplay = currentDashboardMovementsData.monthly;
+            } else if (type === 'weekly') {
+                modalTitle.textContent = 'Movimentações da Semana';
+                dataToDisplay = currentDashboardMovementsData.weekly;
             }
-            const tbody = tableBodyElement.getElementsByTagName('tbody')[0];
-            tbody.innerHTML = ''; // Clear existing rows
+
+            // Store the current data being displayed in the modal for filtering
+            listContainer.dataset.currentData = JSON.stringify(dataToDisplay);
+
+            // Populate the list initially
+            populateDashboardMovementList(dataToDisplay);
+
+            // Clear search input and attach event listener for filtering
+            searchInput.value = '';
+            searchInput.oninput = () => {
+                const filtered = JSON.parse(listContainer.dataset.currentData).filter(item => {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const osMatch = item.os_number && item.os_number.toLowerCase().includes(searchTerm);
+                    const cityMatch = item.cidade_destino && item.cidade_destino.toLowerCase().includes(searchTerm);
+                    return osMatch || cityMatch;
+                });
+                populateDashboardMovementList(filtered);
+            };
+
+            openModal('dashboardMovementsModal');
+        }
+
+        // Função para popular a lista de movimentações no modal do dashboard
+        function populateDashboardMovementList(data) {
+            const listContainer = document.getElementById('dashboard-movements-list');
+            const noDataMessage = document.getElementById('no-dashboard-movements-data');
+            listContainer.innerHTML = '';
 
             if (data && data.length > 0) {
                 data.forEach(mov => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-gray-200 hover:bg-gray-100';
-                    const conjuntosPedidos = mov.itens.map(item => {
-                        let itemStr = `${item.quantidade}x `;
-                        if (item.modelo) {
-                            itemStr += item.modelo;
-                        } else if (item.componente) {
-                            itemStr += item.componente;
-                        }
-                        if (item.tampo && item.tampo !== 'N/A') {
-                            itemStr += ` (Tampo: ${item.tampo})`;
-                        }
-                        return itemStr;
-                    }).join(', ');
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'movement-block'; // Use a classe customizada
+                    
+                    const dataEmissaoFormatada = mov.data_emissao ? new Date(mov.data_emissao).toLocaleDateString('pt-BR') : 'N/A';
 
-                    row.innerHTML = `
-                        <td class="py-3 px-6 text-left">${mov.os_number}</td>
-                        <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">
-                            <button onclick="showOrderDetailsModal('${mov.os_number}', ${escape(JSON.stringify(mov.itens))}, '${mov.cidade_destino}', '${mov.data_emissao}', '${mov.prazo_entrega}')" class="text-indigo-500 hover:underline">
-                                ${conjuntosPedidos}
-                            </button>
-                        </td>
-                        <td class="py-3 px-6 text-left">${mov.data_emissao ? new Date(mov.data_emissao).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                    itemDiv.innerHTML = `
+                        <div class="movement-block-header">
+                            <div>
+                                <p>OS: ${mov.os_number}</p>
+                                <p>Município: ${mov.cidade_destino || 'N/A'}</p>
+                                <p>Data: ${dataEmissaoFormatada}</p>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="movement-block-details">
+                            <h4 class="text-md font-semibold text-gray-700 mb-2">Itens do Pedido:</h4>
+                            <ul>
+                                ${mov.itens.map(item => `
+                                    <li>
+                                        <span>${item.quantidade}x ${item.modelo || item.componente || 'N/A'}</span>
+                                        <span>Tampo: ${item.tampo || 'N/A'}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
                     `;
-                    tbody.appendChild(row);
-                });
-                noDataElement.style.display = 'none';
-            } else {
-                noDataElement.style.display = 'block';
-            }
-        }
-
-        // --- Funções de Detalhes da Movimentação (Modal) ---
-        function showOrderDetailsModal(osNumber, itemsEncoded, cidadeDestino, dataEmissao, prazoEntrega) {
-            const items = JSON.parse(unescape(itemsEncoded)); // Desescapa e parseia os itens
-            const modalOsNumber = document.getElementById('modalOsNumber');
-            if (modalOsNumber) modalOsNumber.textContent = osNumber;
-
-            const modalCidadeDestino = document.getElementById('modalCidadeDestino');
-            if (modalCidadeDestino) modalCidadeDestino.textContent = cidadeDestino || 'N/A';
-
-            const modalDataEmissao = document.getElementById('modalDataEmissao');
-            if (modalDataEmissao) modalDataEmissao.textContent = dataEmissao ? new Date(dataEmissao).toLocaleDateString('pt-BR') : 'N/A';
-
-            const modalPrazoEntrega = document.getElementById('modalPrazoEntrega');
-            if (modalPrazoEntrega) modalPrazoEntrega.textContent = prazoEntrega ? new Date(prazoEntrega).toLocaleDateString('pt-BR') : 'N/A';
-            
-            const orderItemsDetails = document.getElementById('orderItemsDetails');
-            if (orderItemsDetails) {
-                orderItemsDetails.innerHTML = ''; 
-
-                if (items && items.length > 0) {
-                    items.forEach(item => {
-                        const row = document.createElement('tr');
-                        row.className = 'bg-white border-b hover:bg-gray-50';
-                        let itemDisplayName = item.modelo || item.componente || 'N/A';
-                        if (item.tampo && item.tampo !== 'N/A') {
-                            itemDisplayName += ` (Tampo: ${item.tampo})`;
+                    itemDiv.onclick = (event) => {
+                        // Toggle the 'expanded' class on the clicked block
+                        itemDiv.classList.toggle('expanded');
+                        // Toggle the chevron icon
+                        const icon = itemDiv.querySelector('.movement-block-header i');
+                        if (icon) {
+                            if (itemDiv.classList.contains('expanded')) {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-up');
+                            } else {
+                                icon.classList.remove('fa-chevron-up');
+                                icon.classList.add('fa-chevron-down');
+                            }
                         }
-                        row.innerHTML = `
-                            <td class="py-2 px-6">${itemDisplayName}</td>
-                            <td class="py-2 px-6">${item.quantidade || 0}</td>
-                            <td class="py-2 px-6">${item.tampo || 'N/A'}</td>
-                        `;
-                        orderItemsDetails.appendChild(row);
-                    });
-                } else {
-                    orderItemsDetails.innerHTML = '<tr><td colspan="3" class="py-2 px-6 text-center text-gray-500">Nenhum item detalhado para este pedido.</td></tr>';
-                }
+                    };
+                    listContainer.appendChild(itemDiv);
+                });
+                noDataMessage.style.display = 'none';
             } else {
-                console.error('Elemento #orderItemsDetails não encontrado.');
+                noDataMessage.style.display = 'block';
             }
-            openModal('orderDetailsModal'); 
         }
+
 
         // --- Funções de Adição Manual ---
 
@@ -2554,7 +2561,7 @@
             saidaConjuntoItems = {};
             saidaAvulsaItems = [];
             updateConjuntoItemsDisplay('saida');
-            updateAvulsaItemsDisplay('saida');
+            updateAvulsaItemsDisplay('saida'); // Ensure this is called
             populateCJATypesDropdown('saidaConjuntoTipoCJA', CJA_TYPES);
             populateCJAModelsDropdown('saidaConjuntoModeloCJA', CJA_MODELS);
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
@@ -2564,6 +2571,10 @@
         // Função para adicionar um item avulso ao container (reajuste ou saída)
         function addManualItem(containerId, typePrefix) {
             const container = document.getElementById(containerId);
+            if (!container) {
+                console.error(`Container com ID ${containerId} não encontrado.`);
+                return;
+            }
             const newItem = {
                 componente: '',
                 quantidade: 1
@@ -2687,9 +2698,9 @@
         }
 
         function updateAvulsaItemsDisplay(type) {
-            const container = document.getElementById(`${type}AvulsaItemsContainer`);
+            const container = document.getElementById(`${type}ManualItemsContainer`); // Corrected ID reference
             if (!container) {
-                console.error(`Erro: Container avulso com ID ${type}AvulsaItemsContainer não encontrado.`);
+                console.error(`Erro: Container avulso com ID ${type}ManualItemsContainer não encontrado.`);
                 return;
             }
             container.innerHTML = ''; 
@@ -3498,10 +3509,10 @@
 
             // Event listener para o modal de Produção Mínima
             const producaoMinimaModal = document.getElementById('producaoMinimaModal');
-            const cardProducaoMinimaModal = document.getElementById('card-producao-minima-modal'); // Updated ID
+            const cardProducaoMinimaModal = document.getElementById('card-producao-minima-modal'); 
             const closeProducaoMinimaModal = document.getElementById('closeProducaoMinimaModal');
 
-            cardProducaoMinimaModal.addEventListener('click', (e) => { // Updated event listener
+            cardProducaoMinimaModal.addEventListener('click', (e) => { 
                 e.preventDefault();
                 populateProducaoMinima(currentEstoqueData); // Usa os dados reais do estoque
                 openModal('producaoMinimaModal');
@@ -3637,10 +3648,15 @@
 
 
             // Event listeners para os cards do dashboard
-            document.getElementById('card-monthly-movements')?.addEventListener('click', () => toggleVisibility('monthly-movements-details-wrapper'));
-            document.getElementById('card-weekly-movements')?.addEventListener('click', () => toggleVisibility('weekly-movements-details-wrapper'));
+            document.getElementById('card-monthly-movements')?.addEventListener('click', () => openDashboardMovementsModal('monthly'));
+            document.getElementById('card-weekly-movements')?.addEventListener('click', () => openDashboardMovementsModal('weekly'));
             document.getElementById('card-low-stock')?.addEventListener('click', () => toggleVisibility('low-stock-details-wrapper'));
             document.getElementById('card-producao-minima')?.addEventListener('click', () => toggleVisibility('producao-minima-details-wrapper')); // Este card do dashboard
+
+            // Event listener para fechar o modal de movimentações do dashboard
+            document.getElementById('closeDashboardMovementsModal')?.addEventListener('click', () => {
+                closeModal('dashboardMovementsModal');
+            });
 
             // Event listeners para as abas de movimentações
             document.getElementById('tab-saidas')?.addEventListener('click', (event) => showMovementType('saidas', event.target));
@@ -3684,12 +3700,11 @@
             document.getElementById('search-pending-orders')?.addEventListener('input', () => { 
                 filterTable('search-pending-orders', currentPendingOrdersData, populatePendingOrdersTable, false, false, true);
             });
-            // New search listeners for dashboard movement details
-            document.getElementById('search-monthly-movements')?.addEventListener('input', () => {
-                filterTable('search-monthly-movements', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'));
-            });
-            document.getElementById('search-weekly-movements')?.addEventListener('input', () => {
-                filterTable('search-weekly-movements', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'));
+            // New search listener for dashboard movements modal
+            document.getElementById('search-dashboard-movements')?.addEventListener('input', () => {
+                const listContainer = document.getElementById('dashboard-movements-list');
+                const currentData = JSON.parse(listContainer.dataset.currentData || '[]');
+                filterTable('search-dashboard-movements', currentData, populateDashboardMovementList, false, false, false, true);
             });
 
 
@@ -3729,13 +3744,13 @@
             document.querySelectorAll('#table-producao th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-producao', currentMovimentacoesData.filter(mov => mov.tipo === "Produção - Conjunto Pronto"), populateMovimentacoesTable, header.dataset.sortKey));
             });
-            // New sort listeners for dashboard movement details tables
-            document.querySelectorAll('#table-monthly-movements-details th[data-sort-key]').forEach(header => {
-                header.addEventListener('click', () => sortTable('table-monthly-movements-details', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'), header.dataset.sortKey));
-            });
-            document.querySelectorAll('#table-weekly-movements-details th[data-sort-key]').forEach(header => {
-                header.addEventListener('click', () => sortTable('table-weekly-movements-details', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'), header.dataset.sortKey));
-            });
+            // Removed specific sort listeners for dashboard movement details tables as they are replaced by the modal
+            // document.querySelectorAll('#table-monthly-movements-details th[data-sort-key]').forEach(header => {
+            //     header.addEventListener('click', () => sortTable('table-monthly-movements-details', currentMonthlyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-monthly-movements-details', 'no-monthly-movements-data'), header.dataset.sortKey));
+            // });
+            // document.querySelectorAll('#table-weekly-movements-details th[data-sort-key]').forEach(header => {
+            //     header.addEventListener('click', () => sortTable('table-weekly-movements-details', currentWeeklyMovementsDetailsData, (data) => populateDashboardMovementDetailsTable(data, 'table-weekly-movements-details', 'no-weekly-movements-data'), header.dataset.sortKey));
+            // });
 
 
             document.querySelectorAll('#table-audit-log th[data-sort-key]').forEach(header => { 
