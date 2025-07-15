@@ -871,52 +871,7 @@
                             <p id="reajusteDescricao-validation" class="validation-message">Campo obrigatório para adição.</p>
                         </div>
 
-                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Quantidades de Conjuntos/Itens:</h4>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="reajusteConjuntoTipo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                                <select id="reajusteConjuntoTipo" class="select-field">
-                                    <option value="">Selecione o Tipo</option>
-                                    <option value="ZURICH">ZURICH</option>
-                                    <option value="MASTICMOL">MASTICMOL</option>
-                                </select>
-                                <p id="reajusteConjuntoTipo-validation" class="validation-message">Campo obrigatório.</p>
-                            </div>
-                            <div>
-                                <label for="reajusteConjuntoModelo" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                                <select id="reajusteConjuntoModelo" class="select-field">
-                                    <option value="">Selecione o Modelo</option>
-                                    <option value="CJA-06">CJA-06</option>
-                                    <option value="CJA-05">CJA-05</option>
-                                    <option value="CJA-04">CJA-04</option>
-                                    <option value="CJA-03">CJA-03</option>
-                                </select>
-                                <p id="reajusteConjuntoModelo-validation" class="validation-message">Campo obrigatório.</p>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label for="reajusteConjuntoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo (para CJA):</label>
-                            <select id="reajusteConjuntoTampo" class="select-field">
-                                <option value="N/A">Nenhum Tampo</option>
-                                <option value="MDF">MDF</option>
-                                <option value="PLASTICO">PLÁSTICO</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="reajusteConjuntoTampo-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="reajusteConjuntoQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
-                            <input type="number" id="reajusteConjuntoQuantidade" class="input-field" min="1" value="1">
-                            <p id="reajusteConjuntoQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
-                        </div>
-                        <button type="button" id="add-reajuste-conjunto-button" class="btn-primary w-full md:w-auto mb-4">Adicionar Conjunto Selecionado</button>
-
-                        <div id="reajusteConjuntoItemsContainer" class="mb-4 border p-4 rounded-md bg-gray-50">
-                            <p class="text-gray-500 text-sm">Nenhum conjunto adicionado ainda.</p>
-                        </div>
-
-                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Quantidades de Itens Avulsos:</h4>
+                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar/Remover Itens Avulsos:</h4>
                         <div id="reajusteAvulsaItemsContainer">
                             <p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>
                         </div>
@@ -1375,9 +1330,9 @@
     </div>
 
     <!-- Modal para Saída Manual -->
-    <div id="saidaManualModal" class="modal-overlay hidden"> <!-- Changed class to modal-overlay and hidden -->
+    <div id="saidaManualModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="modal-close-button" onclick="closeModal('saidaManualModal')">&times;</button> <!-- Changed class to modal-close-button -->
+            <button class="modal-close-button" onclick="closeModal('saidaManualModal')">&times;</button>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Registrar Saída Manual (Pedido/OS)</h3>
             
             <form id="formSaidaManual">
@@ -1397,8 +1352,7 @@
                 <input type="date" id="saidaPrazoEntrega" name="prazo_entrega" class="input-field" required>
                 <p id="saidaPrazoEntrega-validation" class="validation-message">Campo obrigatório.</p>
 
-                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Remover Conjuntos/Itens:</h4>
-
+                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar Conjuntos Prontos ao Pedido:</h4>
                 <div class="mb-4">
                     <label for="saidaConjuntoTipoCJA" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
                     <select id="saidaConjuntoTipoCJA" class="select-field">
@@ -1441,7 +1395,7 @@
                     <p class="text-gray-500 text-sm">Nenhum conjunto adicionado ainda.</p>
                 </div>
 
-                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Remover Itens Avulsos:</h4>
+                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar Itens Avulsos ao Pedido:</h4>
                 <div id="saidaManualItemsContainer">
                     <!-- Itens avulsos serão adicionados aqui dinamicamente pelo JavaScript -->
                     <p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>
@@ -1457,9 +1411,9 @@
     </div>
 
     <!-- Modal de Confirmação Personalizado -->
-    <div id="customConfirmModal" class="modal-overlay hidden"> <!-- Changed class to modal-overlay and hidden -->
+    <div id="customConfirmModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="modal-close-button" onclick="closeModal('customConfirmModal')">&times;</button> <!-- Changed class to modal-close-button -->
+            <button class="modal-close-button" onclick="closeModal('customConfirmModal')">&times;</button>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4" id="confirmModalTitle">Confirmação</h3>
             <p class="text-gray-700 text-base mb-6" id="confirmModalMessage">Você tem certeza?</p>
             <div class="modal-footer">
@@ -1502,24 +1456,41 @@
         };
 
         // --- Mapeamento de Componentes por CJA (para preenchimento dinâmico) ---
+        // Este mapa agora é apenas para referência de componentes, não para geração automática de quantidades
         const CJA_COMPONENT_MAP = {
             'ZURICH': {
-                'CJA-06': { 'ASSENTO-ZURICH-CJA-06': 1, 'ENCOSTO-ZURICH-CJA-06': 1, 'PORTA-LIVRO': 1 },
-                'CJA-05': { 'ASSENTO-ZURICH-CJA-05': 1, 'ENCOSTO-ZURICH-CJA-05': 1, 'PORTA-LIVRO': 1 },
-                'CJA-04': { 'ASSENTO-ZURICH-CJA-04': 1, 'ENCOSTO-ZURICH-CJA-04': 1, 'PORTA-LIVRO': 1 },
-                'CJA-03': { 'ASSENTO-ZURICH-CJA-03': 1, 'ENCOSTO-ZURICH-CJA-03': 1, 'PORTA-LIVRO': 1 }
+                'CJA-06': ['ASSENTO-ZURICH-CJA-06', 'ENCOSTO-ZURICH-CJA-06', 'PORTA-LIVRO'],
+                'CJA-05': ['ASSENTO-ZURICH-CJA-05', 'ENCOSTO-ZURICH-CJA-05', 'PORTA-LIVRO'],
+                'CJA-04': ['ASSENTO-ZURICH-CJA-04', 'ENCOSTO-ZURICH-CJA-04', 'PORTA-LIVRO'],
+                'CJA-03': ['ASSENTO-ZURICH-CJA-03', 'ENCOSTO-ZURICH-CJA-03', 'PORTA-LIVRO']
             },
             'MASTICMOL': {
-                'CJA-06': { 'ASSENTO-MASTICMOL-CJA-06': 1, 'ENCOSTO-MASTICMOL-CJA-06': 1, 'PORTA-LIVRO': 1 },
-                'CJA-05': { 'ASSENTO-MASTICMOL-CJA-05': 1, 'ENCOSTO-MASTICMOL-CJA-05': 1, 'PORTA-LIVRO': 1 },
-                'CJA-04': { 'ASSENTO-MASTICMOL-CJA-04': 1, 'ENCOSTO-MASTICMOL-CJA-04': 1, 'PORTA-LIVRO': 1 },
-                'CJA-03': { 'ASSENTO-MASTICMOL-CJA-03': 1, 'ENCOSTO-MASTICMOL-CJA-03': 1, 'PORTA-LIVRO': 1 }
+                'CJA-06': ['ASSENTO-MASTICMOL-CJA-06', 'ENCOSTO-MASTICMOL-CJA-06', 'PORTA-LIVRO'],
+                'CJA-05': ['ASSENTO-MASTICMOL-CJA-05', 'ENCOSTO-MASTICMOL-CJA-05', 'PORTA-LIVRO'],
+                'CJA-04': ['ASSENTO-MASTICMOL-CJA-04', 'ENCOSTO-MASTICMOL-CJA-04', 'PORTA-LIVRO'],
+                'CJA-03': ['ASSENTO-MASTICMOL-CJA-03', 'ENCOSTO-MASTICMOL-CJA-03', 'PORTA-LIVRO']
             }
         };
 
         const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL'];
         const CJA_MODELS = ['CJA-06', 'CJA-05', 'CJA-04', 'CJA-03']; 
         const CJA_TYPES = ['ZURICH', 'MASTICMOL'];
+        const ALL_COMPONENTS = [
+            'PORTA-LIVRO',
+            'ASSENTO-ZURICH-CJA-03', 'ENCOSTO-ZURICH-CJA-03',
+            'ASSENTO-ZURICH-CJA-04', 'ENCOSTO-ZURICH-CJA-04',
+            'ASSENTO-ZURICH-CJA-05', 'ENCOSTO-ZURICH-CJA-05',
+            'ASSENTO-ZURICH-CJA-06', 'ENCOSTO-ZURICH-CJA-06',
+            'ASSENTO-MASTICMOL-CJA-03', 'ENCOSTO-MASTICMOL-CJA-03',
+            'ASSENTO-MASTICMOL-CJA-04', 'ENCOSTO-MASTICMOL-CJA-04',
+            'ASSENTO-MASTICMOL-CJA-05', 'ENCOSTO-MASTICMOL-CJA-05',
+            'ASSENTO-MASTICMOL-CJA-06', 'ENCOSTO-MASTICMOL-CJA-06',
+            'TAMPO-MDF-CJA-03', 'TAMPO-PLASTICO-CJA-03', 'TAMPO-MASTICMOL-CJA-03',
+            'TAMPO-MDF-CJA-04', 'TAMPO-PLASTICO-CJA-04', 'TAMPO-MASTICMOL-CJA-04',
+            'TAMPO-MDF-CJA-05', 'TAMPO-PLASTICO-CJA-05', 'TAMPO-MASTICMOL-CJA-05',
+            'TAMPO-MDF-CJA-06', 'TAMPO-PLASTICO-CJA-06', 'TAMPO-MASTICMOL-CJA-06'
+        ];
+
 
         // Variáveis para armazenar os dados brutos das tabelas para pesquisa e ordenação
         let currentEstoqueData = [];
@@ -1537,10 +1508,10 @@
         let cjaProductionChartInstance = null;
 
         // Variáveis para os itens de reajuste/saída manual
-        let reajusteConjuntoItems = {};
-        let reajusteAvulsaItems = [];
-        let saidaConjuntoItems = {};
-        let saidaAvulsaItems = [];
+        let reajusteConjuntoItems = {}; // Para conjuntos prontos no reajuste (se mantivermos)
+        let reajusteAvulsaItems = []; // Para itens avulsos no reajuste
+        let saidaConjuntoItems = {}; // Para conjuntos prontos na saída manual
+        let saidaAvulsaItems = []; // Para itens avulsos na saída manual
 
         let confirmActionCallback = null; // Callback para o modal de confirmação
 
@@ -2548,6 +2519,7 @@
                 console.error(`Container com ID ${containerId} não encontrado.`);
                 return;
             }
+            // Add a new item to the array, with default values
             const newItem = {
                 componente: '',
                 quantidade: 1
@@ -2585,62 +2557,9 @@
         }
 
 
-        function generateConjuntoItems(type) {
-            if (type !== 'reajuste') return; 
-
-            const conjuntoTipoSelect = document.getElementById(`${type}ConjuntoTipo`);
-            const conjuntoModeloSelect = document.getElementById(`${type}ConjuntoModelo`);
-            const conjuntoQuantidadeInput = document.getElementById(`${type}ConjuntoQuantidade`);
-            const conjuntoTampoSelect = document.getElementById(`${type}ConjuntoTampo`);
-            const container = document.getElementById(`${type}ConjuntoItemsContainer`);
-
-            container.innerHTML = ''; 
-
-            const selectedTipo = conjuntoTipoSelect.value;
-            const selectedModelo = conjuntoModeloSelect.value;
-            const quantidadeConjuntos = parseInt(conjuntoQuantidadeInput.value) || 0;
-            const selectedTampo = conjuntoTampoSelect.value;
-
-            if (selectedTipo && selectedModelo && quantidadeConjuntos > 0) {
-                const components = CJA_COMPONENT_MAP[selectedTipo]?.[selectedModelo];
-                if (components) {
-                    let itemsHtml = '';
-                    let currentConjuntoItems = {};
-
-                    for (const compName in components) {
-                        const totalQuantity = components[compName] * quantidadeConjuntos;
-                        itemsHtml += `
-                            <div class="mb-2">
-                                <label class="block text-gray-700 text-sm font-bold mb-1">${compName}:</label>
-                                <input type="number" class="input-field w-full" value="${totalQuantity}" data-component="${compName}" data-tampo="N/A" disabled>
-                            </div>
-                        `;
-                        currentConjuntoItems[compName] = totalQuantity;
-                    }
-
-                    if (selectedTampo !== 'N/A') {
-                        const tampoName = `TAMPO-${selectedTampo.toUpperCase()}-${selectedModelo}`;
-                        const totalQuantity = quantidadeConjuntos; 
-                        itemsHtml += `
-                            <div class="mb-2">
-                                <label class="block text-gray-700 text-sm font-bold mb-1">${tampoName}:</label>
-                                <input type="number" class="input-field w-full" value="${totalQuantity}" data-component="${tampoName}" data-tampo="${selectedTampo.toUpperCase()}" disabled>
-                            </div>
-                        `;
-                        currentConjuntoItems[tampoName] = totalQuantity;
-                    }
-                    
-                    container.innerHTML = itemsHtml;
-                    reajusteConjuntoItems = currentConjuntoItems;
-                } else {
-                    container.innerHTML = '<p class="text-gray-500 text-sm">Configuração de componentes para este CJA não encontrada.</p>';
-                    reajusteConjuntoItems = {};
-                }
-            } else {
-                container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum conjunto adicionado ainda.</p>';
-                reajusteConjuntoItems = {};
-            }
-        }
+        // Removida a função generateConjuntoItems, pois a lógica de preenchimento automático
+        // de componentes de CJA foi desativada para reajustes.
+        // Agora, os itens avulsos são adicionados manualmente.
 
         function updateConjuntoItemsDisplay(type) {
             const container = document.getElementById(`${type}ConjuntoItemsContainer`);
@@ -2695,35 +2614,7 @@
                         <label for="${type}AvulsaComponente${index}" class="block text-gray-700 text-sm font-bold mb-1">Componente:</label>
                         <select id="${type}AvulsaComponente${index}" class="select-field w-full">
                             <option value="">Selecione</option>
-                            <option value="PORTA-LIVRO" ${item.componente === 'PORTA-LIVRO' ? 'selected' : ''}>PORTA-LIVRO</option>
-                            <option value="ASSENTO-ZURICH-CJA-03" ${item.componente === 'ASSENTO-ZURICH-CJA-03' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-03</option>
-                            <option value="ENCOSTO-ZURICH-CJA-03" ${item.componente === 'ENCOSTO-ZURICH-CJA-03' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-03</option>
-                            <option value="ASSENTO-ZURICH-CJA-04" ${item.componente === 'ASSENTO-ZURICH-CJA-04' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-04</option>
-                            <option value="ENCOSTO-ZURICH-CJA-04" ${item.componente === 'ENCOSTO-ZURICH-CJA-04' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-04</option>
-                            <option value="ASSENTO-ZURICH-CJA-05" ${item.componente === 'ASSENTO-ZURICH-CJA-05' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-05</option>
-                            <option value="ENCOSTO-ZURICH-CJA-05" ${item.componente === 'ENCOSTO-ZURICH-CJA-05' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-05</option>
-                            <option value="ASSENTO-ZURICH-CJA-06" ${item.componente === 'ASSENTO-ZURICH-CJA-06' ? 'selected' : ''}>ASSENTO-ZURICH-CJA-06</option>
-                            <option value="ENCOSTO-ZURICH-CJA-06" ${item.componente === 'ENCOSTO-ZURICH-CJA-06' ? 'selected' : ''}>ENCOSTO-ZURICH-CJA-06</option>
-                            <option value="ASSENTO-MASTICMOL-CJA-03" ${item.componente === 'ASSENTO-MASTICMOL-CJA-03' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-03</option>
-                            <option value="ENCOSTO-MASTICMOL-CJA-03" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-03' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-03</option>
-                            <option value="ASSENTO-MASTICMOL-CJA-04" ${item.componente === 'ASSENTO-MASTICMOL-CJA-04' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-04</option>
-                            <option value="ENCOSTO-MASTICMOL-CJA-04" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-04' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-04</option>
-                            <option value="ASSENTO-MASTICMOL-CJA-05" ${item.componente === 'ASSENTO-MASTICMOL-CJA-05' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-05</option>
-                            <option value="ENCOSTO-MASTICMOL-CJA-05" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-05' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-05</option>
-                            <option value="ASSENTO-MASTICMOL-CJA-06" ${item.componente === 'ASSENTO-MASTICMOL-CJA-06' ? 'selected' : ''}>ASSENTO-MASTICMOL-CJA-06</option>
-                            <option value="ENCOSTO-MASTICMOL-CJA-06" ${item.componente === 'ENCOSTO-MASTICMOL-CJA-06' ? 'selected' : ''}>ENCOSTO-MASTICMOL-CJA-06</option>
-                            <option value="TAMPO-MDF-CJA-03" ${item.componente === 'TAMPO-MDF-CJA-03' ? 'selected' : ''}>TAMPO-MDF-CJA-03</option>
-                            <option value="TAMPO-PLASTICO-CJA-03" ${item.componente === 'TAMPO-PLASTICO-CJA-03' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-03</option>
-                            <option value="TAMPO-MASTICMOL-CJA-03" ${item.componente === 'TAMPO-MASTICMOL-CJA-03' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-03</option>
-                            <option value="TAMPO-MDF-CJA-04" ${item.componente === 'TAMPO-MDF-CJA-04' ? 'selected' : ''}>TAMPO-MDF-CJA-04</option>
-                            <option value="TAMPO-PLASTICO-CJA-04" ${item.componente === 'TAMPO-PLASTICO-CJA-04' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-04</option>
-                            <option value="TAMPO-MASTICMOL-CJA-04" ${item.componente === 'TAMPO-MASTICMOL-CJA-04' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-04</option>
-                            <option value="TAMPO-MDF-CJA-05" ${item.componente === 'TAMPO-MDF-CJA-05' ? 'selected' : ''}>TAMPO-MDF-CJA-05</option>
-                            <option value="TAMPO-PLASTICO-CJA-05" ${item.componente === 'TAMPO-PLASTICO-CJA-05' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-05</option>
-                            <option value="TAMPO-MASTICMOL-CJA-05" ${item.componente === 'TAMPO-MASTICMOL-CJA-05' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-05</option>
-                            <option value="TAMPO-MDF-CJA-06" ${item.componente === 'TAMPO-MDF-CJA-06' ? 'selected' : ''}>TAMPO-MDF-CJA-06</option>
-                            <option value="TAMPO-PLASTICO-CJA-06" ${item.componente === 'TAMPO-PLASTICO-CJA-06' ? 'selected' : ''}>TAMPO-PLASTICO-CJA-06</option>
-                            <option value="TAMPO-MASTICMOL-CJA-06" ${item.componente === 'TAMPO-MASTICMOL-CJA-06' ? 'selected' : ''}>TAMPO-MASTICMOL-CJA-06</option>
+                            ${ALL_COMPONENTS.map(comp => `<option value="${comp}" ${item.componente === comp ? 'selected' : ''}>${comp}</option>`).join('')}
                         </select>
                     </div>
                     <div class="flex-1">
@@ -3520,11 +3411,11 @@
                 }
             });
 
-            // Event listeners para os seletores de conjunto no Reajuste
-            document.getElementById('reajusteConjuntoTipo').addEventListener('change', () => generateConjuntoItems('reajuste'));
-            document.getElementById('reajusteConjuntoModelo').addEventListener('change', () => generateConjuntoItems('reajuste'));
-            document.getElementById('reajusteConjuntoQuantidade').addEventListener('input', () => generateConjuntoItems('reajuste'));
-            document.getElementById('reajusteConjuntoTampo').addEventListener('change', () => generateConjuntoItems('reajuste')); 
+            // Removidos os event listeners para geração automática de conjuntos no reajuste
+            // document.getElementById('reajusteConjuntoTipo').addEventListener('change', () => generateConjuntoItems('reajuste'));
+            // document.getElementById('reajusteConjuntoModelo').addEventListener('change', () => generateConjuntoItems('reajuste'));
+            // document.getElementById('reajusteConjuntoQuantidade').addEventListener('input', () => generateConjuntoItems('reajuste'));
+            // document.getElementById('reajusteConjuntoTampo').addEventListener('change', () => generateConjuntoItems('reajuste')); 
 
             // Popula dropdowns para formulários de adicionar/retirar conjuntos
             populateCJATypesDropdown('addConjuntosTipoCJALocal', CJA_TYPES);
@@ -3569,21 +3460,12 @@
                     return;
                 }
 
-                const components = CJA_COMPONENT_MAP[tipo.value]?.[modelo.value];
-                if (components) {
-                    for (const compName in components) {
-                        reajusteConjuntoItems[compName] = (reajusteConjuntoItems[compName] || 0) + (components[compName] * parseInt(quantidade.value));
-                    }
-                    if (tampo.value !== 'N/A') {
-                        const tampoName = `TAMPO-${tampo.value.toUpperCase()}-${modelo.value}`;
-                        reajusteConjuntoItems[tampoName] = (reajusteConjuntoItems[tampoName] || 0) + parseInt(quantidade.value);
-                    }
+                // Lógica para adicionar conjuntos prontos ao reajuste
+                const modeloCompleto = `CONJUNTO-PRONTO-LOCAL-${tipo.value}-${modelo.value}-${tampo.value}`;
+                reajusteConjuntoItems[modeloCompleto] = (reajusteConjuntoItems[modeloCompleto] || 0) + parseInt(quantidade.value);
 
-                    updateConjuntoItemsDisplay('reajuste');
-                    showToast(`Conjunto ${tipo.value}-${modelo.value} (${quantidade.value}x) adicionado para reajuste.`, 'success');
-                } else {
-                    showToast('Configuração de componentes para o CJA selecionada não encontrada.', 'error');
-                }
+                updateConjuntoItemsDisplay('reajuste');
+                showToast(`Conjunto ${tipo.value}-${modelo.value} (${quantidade.value}x) adicionado para reajuste.`, 'success');
             });
 
             document.getElementById('add-saida-conjunto-button').addEventListener('click', () => {
