@@ -1549,6 +1549,7 @@
                 const idTokenResult = await user.getIdTokenResult();
                 
                 currentUser.token = idTokenResult.token;
+                localStorage.setItem('token', idTokenResult.token); // <--- ADICIONADO: Salva o token no localStorage
                 currentUser.username = user.displayName || username; 
                 currentUser.role = idTokenResult.claims.role || 'visualizador'; 
                 currentUser.firebaseUser = user;
@@ -1579,6 +1580,7 @@
             try {
                 showLoading();
                 await signOut(auth);
+                localStorage.removeItem('token'); // <--- CORRIGIDO: Remove o token do localStorage
                 hideLoading();
                 showToast('Logout bem-sucedido!', 'info');
             } catch (error) {
@@ -3517,7 +3519,8 @@
                         } else {
                             showToast('Erro ao inicializar dados: ' + (data.message || 'Erro desconhecido.'), 'error');
                         }
-                    } catch (error) {
+                    }
+                    catch (error) {
                         console.error('Erro ao inicializar dados:', error);
                         showToast('Erro de conexão ao inicializar dados.', 'error');
                     } finally {
@@ -4030,7 +4033,7 @@
 
             // Event listeners para os botões do modal de confirmação
             document.getElementById('confirmModalConfirm').addEventListener('click', () => {
-                closeModal('customConfirmModal'); // Usa a função closeModal
+                closeModal('customConfirmModal'); // Usa a função openModal
                 if (confirmActionCallback) {
                     confirmActionCallback();
                     confirmActionCallback = null; 
@@ -4056,6 +4059,7 @@
                 if (user) {
                     const idTokenResult = await user.getIdTokenResult();
                     currentUser.token = idTokenResult.token;
+                    localStorage.setItem('token', idTokenResult.token); // <--- ADICIONADO: Salva o token no localStorage
                     currentUser.username = user.displayName || user.email.split('@')[0];
                     currentUser.role = idTokenResult.claims.role || 'visualizador';
                     currentUser.firebaseUser = user;
@@ -4069,7 +4073,7 @@
                     currentUser.username = null;
                     currentUser.role = null;
                     currentUser.firebaseUser = null;
-                    localStorage.removeItem('authToken'); // Limpa qualquer token antigo
+                    localStorage.removeItem('token'); // <--- CORRIGIDO: Remove o token do localStorage
                     localStorage.removeItem('username');
                     localStorage.removeItem('role');
                     showLoginScreen();
