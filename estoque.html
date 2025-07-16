@@ -828,7 +828,6 @@
                                     <option value="">Selecione o Tipo de CJA</option>
                                     <option value="ZURICH">ZURICH</option>
                                     <option value="MASTICMOL">MASTICMOL</option>
-                                    <option value="NAO_CJA">NÃO CJA (Porta-Livro / Tampo Geral)</option>
                                 </select>
                                 <p id="reajusteTipoCJA-validation" class="validation-message">Campo obrigatório.</p>
                             </div>
@@ -849,11 +848,21 @@
                                 </select>
                                 <p id="reajusteComponenteTipo-validation" class="validation-message">Campo obrigatório.</p>
                             </div>
-                            <div>
-                                <label for="reajusteQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
-                                <input type="number" id="reajusteQuantidade" name="quantidade" class="input-field" min="1" value="1" required>
-                                <p id="reajusteQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            <div id="reajusteTipoTampoContainer" class="hidden">
+                                <label for="reajusteTipoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                                <select id="reajusteTipoTampo" name="tipo_tampo" class="select-field" disabled required>
+                                    <option value="">Selecione o Tipo de Tampo</option>
+                                    <option value="MDF">MDF</option>
+                                    <option value="PLASTICO">PLÁSTICO</option>
+                                </select>
+                                <p id="reajusteTipoTampo-validation" class="validation-message">Campo obrigatório.</p>
                             </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="reajusteQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
+                            <input type="number" id="reajusteQuantidade" name="quantidade" class="input-field" min="1" value="1" required>
+                            <p id="reajusteQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
                         </div>
 
                         <div class="modal-footer justify-center">
@@ -1464,7 +1473,8 @@
         // --- Listas de Componentes e Modelos ---
         const CJA_MODELS = ['CJA-06', 'CJA-05', 'CJA-04', 'CJA-03']; 
         const CJA_TYPES = ['ZURICH', 'MASTICMOL'];
-        const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL'];
+        const TAMPO_TYPES = ['MDF', 'PLASTICO', 'MASTICMOL']; // Mantido para outros formulários
+        const TAMPO_REAJUSTE_TYPES = ['MDF', 'PLASTICO']; // Apenas para o reajuste de tampo
 
         // Lista completa de todos os componentes individuais para dropdowns
         // Esta lista será usada para validação e construção final do nome do componente
@@ -2714,8 +2724,7 @@
             });
         }
 
-        // Nova função para popular o dropdown de componentes (para reajuste)
-        // Esta função agora será mais genérica e auxiliará na lógica em cascata
+        // Nova função para popular o dropdown de tipos de componentes (ASSENTO, ENCOSTO, TAMPO, PORTA-LIVRO)
         function populateComponentTypeDropdown(selectId, optionsArray) {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) {
@@ -2723,6 +2732,22 @@
                 return;
             }
             selectElement.innerHTML = '<option value="">Selecione o Tipo de Componente</option>';
+            optionsArray.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectElement.appendChild(opt);
+            });
+        }
+
+        // Nova função para popular o dropdown de tipos de tampo (MDF, PLASTICO)
+        function populateTampoReajusteTypesDropdown(selectId, optionsArray) {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) {
+                console.error(`Elemento select com ID ${selectId} não encontrado.`);
+                return;
+            }
+            selectElement.innerHTML = '<option value="">Selecione o Tipo de Tampo</option>';
             optionsArray.forEach(option => {
                 const opt = document.createElement('option');
                 opt.value = option;
@@ -3503,9 +3528,11 @@
             const reajusteTipoCJASelect = document.getElementById('reajusteTipoCJA');
             const reajusteModeloCJASelect = document.getElementById('reajusteModeloCJA');
             const reajusteComponenteTipoSelect = document.getElementById('reajusteComponenteTipo');
+            const reajusteTipoTampoSelect = document.getElementById('reajusteTipoTampo'); // Novo
             const reajusteModeloCJAContainer = document.getElementById('reajusteModeloCJAContainer');
+            const reajusteTipoTampoContainer = document.getElementById('reajusteTipoTampoContainer'); // Novo
 
-            function resetComponentSelection() {
+            function resetComponentSelectionReajuste() {
                 reajusteModeloCJASelect.innerHTML = '<option value="">Selecione o Modelo CJA</option>';
                 reajusteModeloCJASelect.disabled = true;
                 reajusteModeloCJASelect.classList.remove('invalid');
@@ -3515,28 +3542,28 @@
                 reajusteComponenteTipoSelect.disabled = true;
                 reajusteComponenteTipoSelect.classList.remove('invalid');
                 document.getElementById('reajusteComponenteTipo-validation').classList.remove('show');
+
+                reajusteTipoTampoSelect.innerHTML = '<option value="">Selecione o Tipo de Tampo</option>'; // Novo
+                reajusteTipoTampoSelect.disabled = true; // Novo
+                reajusteTipoTampoContainer.classList.add('hidden'); // Novo
+                reajusteTipoTampoSelect.classList.remove('invalid'); // Novo
+                document.getElementById('reajusteTipoTampo-validation').classList.remove('show'); // Novo
             }
 
             reajusteTipoCJASelect.addEventListener('change', () => {
-                resetComponentSelection();
+                resetComponentSelectionReajuste();
                 const selectedType = reajusteTipoCJASelect.value;
 
                 if (selectedType === 'ZURICH' || selectedType === 'MASTICMOL') {
                     reajusteModeloCJAContainer.classList.remove('hidden');
                     reajusteModeloCJASelect.disabled = false;
                     populateCJAModelsDropdown('reajusteModeloCJA', CJA_MODELS);
-                    // Habilita o tipo de componente para ASSENTO, ENCOSTO, TAMPO
-                    populateComponentTypeDropdown('reajusteComponenteTipo', ['ASSENTO', 'ENCOSTO', 'TAMPO']);
-                    reajusteComponenteTipoSelect.disabled = false;
-                } else if (selectedType === 'NAO_CJA') {
-                    reajusteModeloCJAContainer.classList.add('hidden');
-                    reajusteModeloCJASelect.disabled = true;
-                    // Habilita o tipo de componente para PORTA-LIVRO, TAMPO
-                    populateComponentTypeDropdown('reajusteComponenteTipo', ['PORTA-LIVRO', 'TAMPO']);
+                    // Habilita o tipo de componente para ASSENTO, ENCOSTO, TAMPO, PORTA-LIVRO
+                    populateComponentTypeDropdown('reajusteComponenteTipo', ['ASSENTO', 'ENCOSTO', 'PORTA-LIVRO', 'TAMPO']);
                     reajusteComponenteTipoSelect.disabled = false;
                 } else {
-                    reajusteModeloCJAContainer.classList.remove('hidden'); // Oculta o container
-                    resetComponentSelection();
+                    reajusteModeloCJAContainer.classList.add('hidden'); // Oculta o container
+                    resetComponentSelectionReajuste();
                 }
             });
 
@@ -3544,8 +3571,23 @@
                 // Se o modelo CJA for alterado, revalida o tipo de componente
                 const selectedType = reajusteTipoCJASelect.value;
                 if (selectedType === 'ZURICH' || selectedType === 'MASTICMOL') {
-                    populateComponentTypeDropdown('reajusteComponenteTipo', ['ASSENTO', 'ENCOSTO', 'TAMPO']);
+                    populateComponentTypeDropdown('reajusteComponenteTipo', ['ASSENTO', 'ENCOSTO', 'PORTA-LIVRO', 'TAMPO']);
                     reajusteComponenteTipoSelect.disabled = false;
+                }
+            });
+
+            reajusteComponenteTipoSelect.addEventListener('change', () => {
+                const selectedComponentType = reajusteComponenteTipoSelect.value;
+                if (selectedComponentType === 'TAMPO') {
+                    reajusteTipoTampoContainer.classList.remove('hidden');
+                    reajusteTipoTampoSelect.disabled = false;
+                    populateTampoReajusteTypesDropdown('reajusteTipoTampo', TAMPO_REAJUSTE_TYPES);
+                } else {
+                    reajusteTipoTampoContainer.classList.add('hidden');
+                    reajusteTipoTampoSelect.disabled = true;
+                    reajusteTipoTampoSelect.value = ''; // Limpa a seleção
+                    reajusteTipoTampoSelect.classList.remove('invalid');
+                    document.getElementById('reajusteTipoTampo-validation').classList.remove('show');
                 }
             });
 
@@ -3591,10 +3633,19 @@
                 isValid = validateField(reajusteTipoCJASelect, document.getElementById('reajusteTipoCJA-validation')) && isValid;
 
                 const selectedTypeCJA = reajusteTipoCJASelect.value;
+                const selectedModeloCJA = reajusteModeloCJASelect.value;
+                const selectedComponenteTipo = reajusteComponenteTipoSelect.value;
+                const selectedTipoTampo = reajusteTipoTampoSelect.value; // Novo
+
                 if (selectedTypeCJA === 'ZURICH' || selectedTypeCJA === 'MASTICMOL') {
                     isValid = validateField(reajusteModeloCJASelect, document.getElementById('reajusteModeloCJA-validation')) && isValid;
                 }
                 isValid = validateField(reajusteComponenteTipoSelect, document.getElementById('reajusteComponenteTipo-validation')) && isValid;
+                
+                if (selectedComponenteTipo === 'TAMPO') {
+                    isValid = validateField(reajusteTipoTampoSelect, document.getElementById('reajusteTipoTampo-validation')) && isValid;
+                }
+
                 isValid = validateField(reajusteQuantidade, document.getElementById('reajusteQuantidade-validation')) && isValid;
 
                 if (!isValid) {
@@ -3607,34 +3658,15 @@
                 const quantidade = parseInt(document.getElementById('reajusteQuantidade').value);
 
                 let componenteFinal = '';
-                if (selectedTypeCJA === 'NAO_CJA') {
-                    if (reajusteComponenteTipoSelect.value === 'PORTA-LIVRO') {
-                        componenteFinal = 'PORTA-LIVRO';
-                    } else if (reajusteComponenteTipoSelect.value === 'TAMPO') {
-                        // Para tampo geral, precisamos de um modelo CJA e tipo de tampo
-                        // Como é "NÃO CJA", vamos simplificar para um nome genérico ou exigir mais detalhes se necessário
-                        // Por agora, vamos assumir que "TAMPO" aqui significa um tampo genérico se não for CJA específico
-                        // Se precisar ser mais específico, o backend precisará de mais lógica.
-                        showToast('Para Tampos, por favor, selecione um Tipo de CJA (ZURICH/MASTICMOL) para especificar o modelo e tipo de tampo (MDF/PLASTICO/MASTICMOL).', 'error');
-                        return;
-                    }
-                } else { // ZURICH ou MASTICMOL
-                    const modeloCJA = reajusteModeloCJASelect.value;
-                    const componenteTipo = reajusteComponenteTipoSelect.value;
-                    
-                    if (componenteTipo === 'TAMPO') {
-                        // Para tampos CJA, precisamos de um tipo de tampo (MDF, PLASTICO, MASTICMOL)
-                        // Poderíamos adicionar outro dropdown aqui, mas para manter a simplicidade,
-                        // vamos assumir que o "Tipo de Componente: TAMPO" implica em uma escolha posterior
-                        // ou que o backend lida com isso.
-                        // Para esta iteração, vamos forçar a seleção de um tipo de tampo
-                        showToast('Para Tampos CJA, por favor, selecione o tipo de tampo (MDF, PLASTICO, MASTICMOL) no próximo campo.', 'error');
-                        return;
-                    }
-                    componenteFinal = `${componenteTipo.toUpperCase()}-${selectedTypeCJA.toUpperCase()}-${modeloCJA.toUpperCase()}`;
+                if (selectedComponenteTipo === 'PORTA-LIVRO') {
+                    componenteFinal = 'PORTA-LIVRO';
+                } else if (selectedComponenteTipo === 'ASSENTO' || selectedComponenteTipo === 'ENCOSTO') {
+                    componenteFinal = `${selectedComponenteTipo.toUpperCase()}-${selectedTypeCJA.toUpperCase()}-${selectedModeloCJA.toUpperCase()}`;
+                } else if (selectedComponenteTipo === 'TAMPO') {
+                    componenteFinal = `TAMPO-${selectedTipoTampo.toUpperCase()}-${selectedModeloCJA.toUpperCase()}`;
                 }
 
-                // Se o componente final não foi construído (por exemplo, se o TAMPO não foi totalmente especificado)
+                // Validação final do nome do componente construído
                 if (!componenteFinal || !ALL_COMPONENTS.includes(componenteFinal)) {
                     showToast('Combinação de componentes inválida. Por favor, verifique suas seleções.', 'error');
                     return;
@@ -3652,7 +3684,7 @@
                     document.getElementById('formReajusteEstoque').reset();
                     // Limpar e desabilitar os campos em cascata
                     reajusteTipoCJASelect.value = '';
-                    resetComponentSelection();
+                    resetComponentSelectionReajuste();
 
                     document.getElementById('reajusteQuantidade').value = '1';
 
