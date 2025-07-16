@@ -510,6 +510,32 @@
         </div>
     </div>
 
+    <!-- NOVO: Modal para Itens com Estoque Baixo -->
+    <div id="lowStockModal" class="modal-overlay hidden">
+        <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
+            <button id="closeLowStockModal" class="modal-close-button">&times;</button>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-6">Detalhes dos Itens com Estoque Baixo</h3>
+            <div class="mb-4">
+                <label for="search-low-stock" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar Componente:</label>
+                <input type="text" id="search-low-stock" class="input-field" placeholder="Digite para pesquisar componentes...">
+            </div>
+            <div class="table-container">
+                <table id="table-low-stock">
+                    <thead>
+                        <tr>
+                            <th data-sort-key="componente">COMPONENTE</th>
+                            <th data-sort-key="quantidade">QUANTIDADE ATUAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="low-stock-table-body">
+                        <!-- Dados serão inseridos aqui pelo JavaScript -->
+                    </tbody>
+                </table>
+                <p id="no-low-stock-data-modal" class="no-data">Nenhum item com estoque baixo encontrado.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
@@ -636,29 +662,12 @@
                 <div class="card mt-6 cursor-pointer hover:bg-gray-50 transition duration-200" id="card-producao-minima-modal">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos</h3>
                 </div>
-                <!-- Estoque Baixo Section -->
+                <!-- Estoque Baixo Section (Agora um trigger para modal) -->
                 <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-low-stock">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Itens com Estoque Baixo (Abaixo de 300)</h3>
                     <p class="text-3xl md:text-4xl font-bold text-red-600" id="low-stock-count">0</p>
                 </div>
-                <div id="low-stock-details-wrapper" class="hidden card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalhes dos Itens com Estoque Baixo</h3>
-                    <div class="table-container">
-                        <table id="table-low-stock">
-                            <thead>
-                                <tr>
-                                    <th data-sort-key="componente">COMPONENTE</th>
-                                    <th data-sort-key="quantidade">QUANTIDADE ATUAL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dados serão inseridos aqui pelo JavaScript -->
-                            </tbody>
-                        </table>
-                        <p id="no-low-stock-data" class="no-data">Nenhum item com estoque baixo encontrado.</p>
-                    </div>
-                </div>
-
+                
                 <!-- Gráfico de Movimentações Mensais (EXISTENTE) -->
                 <div class="card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Movimentações de Estoque (Últimos 6 Meses)</h3>
@@ -1459,7 +1468,7 @@
         let currentEstoqueData = [];
         let currentMovimentacoesData = [];
         let currentUsersData = [];
-        let currentLowStockData = [];
+        let currentLowStockData = []; // Agora populada para o modal
         let currentProducaoMinimaData = [];
         let currentAuditLogData = [];
         let currentPendingOrdersData = [];
@@ -1779,7 +1788,7 @@
         }
 
         // --- Funções de Pesquisa e Ordenação ---
-        function filterTable(searchInputId, dataArray, populateFunction, isMovementTable = false, isAuditLogTable = false, isPendingOrderTable = false, isDashboardMovementList = false) {
+        function filterTable(searchInputId, dataArray, populateFunction, isMovementTable = false, isAuditLogTable = false, isPendingOrderTable = false, isDashboardMovementList = false, isLowStockTable = false) {
             const searchTerm = document.getElementById(searchInputId).value.toLowerCase();
             let filteredData = [];
 
@@ -1805,6 +1814,8 @@
                     const cityMatch = item.cidade_destino && item.cidade_destino.toLowerCase().includes(searchTerm);
                     return osMatch || cityMatch;
                 });
+            } else if (isLowStockTable) {
+                filteredData = dataArray.filter(item => item.componente.toLowerCase().includes(searchTerm));
             }
             else {
                 // General filter for any table
@@ -2250,68 +2261,53 @@
                     console.error('Elemento #total-items não encontrado no dashboard.');
                 }
 
-                const lowStockTableBody = document.getElementById('table-low-stock');
-                const noLowStockData = document.getElementById('no-low-stock-data');
-                const lowStockCard = document.getElementById('card-low-stock');
-                const lowStockCountElement = document.getElementById('low-stock-count');
+                // Populando currentLowStockData para o modal
+                let lowStockItemCount = 0;
+                const LOW_STOCK_THRESHOLD = 300;
+                currentLowStockData = []; 
 
-                if (lowStockTableBody && lowStockTableBody.getElementsByTagName('tbody')[0]) {
-                    const tbody = lowStockTableBody.getElementsByTagName('tbody')[0];
-                    tbody.innerHTML = '';
-                    let hasLowStock = false;
-                    let lowStockItemCount = 0;
-                    const LOW_STOCK_THRESHOLD = 300;
-                    currentLowStockData = []; 
-
-                    // Usar ALL_COMPONENTS para verificar estoque baixo
-                    ALL_COMPONENTS.forEach(componentName => {
-                        const quantity = stockMap[componentName] || 0;
-                        if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) { 
-                            hasLowStock = true;
-                            lowStockItemCount++;
-                            currentLowStockData.push({ componente: componentName, quantidade: quantity });
-                        }
-                    });
-                    
-                    // Adicionar conjuntos prontos à verificação de estoque baixo
-                    const ALL_CONJUNTOS_PRONTOS = [];
-                    CJA_TYPES.forEach(cjaType => {
-                        CJA_MODELS.forEach(cjaModel => {
-                            TAMPO_TYPES.forEach(tampoType => {
-                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-LOCAL-${cjaType}-${cjaModel}-${tampoType}`);
-                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-DISTRITO-${cjaType}-${cjaModel}-${tampoType}`);
-                            });
+                // Usar ALL_COMPONENTS para verificar estoque baixo
+                ALL_COMPONENTS.forEach(componentName => {
+                    const quantity = stockMap[componentName] || 0;
+                    if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) { 
+                        lowStockItemCount++;
+                        currentLowStockData.push({ componente: componentName, quantidade: quantity });
+                    }
+                });
+                
+                // Adicionar conjuntos prontos à verificação de estoque baixo
+                const ALL_CONJUNTOS_PRONTOS = [];
+                CJA_TYPES.forEach(cjaType => {
+                    CJA_MODELS.forEach(cjaModel => {
+                        TAMPO_TYPES.forEach(tampoType => {
+                            ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-LOCAL-${cjaType}-${cjaModel}-${tampoType}`);
+                            ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-DISTRITO-${cjaType}-${cjaModel}-${tampoType}`);
                         });
                     });
+                });
 
-                    ALL_CONJUNTOS_PRONTOS.forEach(conjuntoName => {
-                        const quantity = stockMap[conjuntoName] || 0;
-                        if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) {
-                            hasLowStock = true;
-                            lowStockItemCount++;
-                            currentLowStockData.push({ componente: conjuntoName, quantidade: quantity });
-                        }
-                    });
-
-
-                    if (lowStockCountElement) {
-                        lowStockCountElement.textContent = lowStockItemCount;
+                ALL_CONJUNTOS_PRONTOS.forEach(conjuntoName => {
+                    const quantity = stockMap[conjuntoName] || 0;
+                    if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) {
+                        lowStockItemCount++;
+                        currentLowStockData.push({ componente: conjuntoName, quantidade: quantity });
                     }
-                    if (lowStockCard) {
-                        if (lowStockItemCount > 0) {
-                            lowStockCard.classList.add('low-stock-alert');
-                        } else {
-                            lowStockCard.classList.remove('low-stock-alert');
-                        }
-                    }
+                });
 
-                    populateLowStockTable(currentLowStockData); 
-                    if (noLowStockData) {
-                        noLowStockData.style.display = hasLowStock ? 'none' : 'block';
-                    }
-                } else {
-                    console.error('Elemento #table-low-stock ou seu tbody não encontrado.');
+                const lowStockCountElement = document.getElementById('low-stock-count');
+                const lowStockCard = document.getElementById('card-low-stock');
+
+                if (lowStockCountElement) {
+                    lowStockCountElement.textContent = lowStockItemCount;
                 }
+                if (lowStockCard) {
+                    if (lowStockItemCount > 0) {
+                        lowStockCard.classList.add('low-stock-alert');
+                    } else {
+                        lowStockCard.classList.remove('low-stock-alert');
+                    }
+                }
+
                 populateProducaoMinima(estoqueData); 
             }
 
@@ -2348,9 +2344,10 @@
             }
         }
 
+        // Função para popular a tabela de estoque baixo (agora dentro do modal)
         function populateLowStockTable(data) {
-            const tbody = document.getElementById('table-low-stock').getElementsByTagName('tbody')[0];
-            const noDataElement = document.getElementById('no-low-stock-data');
+            const tbody = document.getElementById('low-stock-table-body');
+            const noDataElement = document.getElementById('no-low-stock-data-modal');
             tbody.innerHTML = '';
             if (data.length > 0) {
                 data.forEach(item => {
@@ -2404,6 +2401,24 @@
 
             openModal('dashboardMovementsModal');
         }
+
+        // NOVO: Função para abrir o modal de Estoque Baixo
+        function openLowStockModal() {
+            const searchInput = document.getElementById('search-low-stock');
+            const tableBody = document.getElementById('low-stock-table-body');
+
+            // Populate the table initially
+            populateLowStockTable(currentLowStockData);
+
+            // Clear search input and attach event listener for filtering
+            searchInput.value = '';
+            searchInput.oninput = () => {
+                filterTable('search-low-stock', currentLowStockData, populateLowStockTable, false, false, false, false, true);
+            };
+
+            openModal('lowStockModal');
+        }
+
 
         // Função para popular a lista de movimentações no modal do dashboard
         function populateDashboardMovementList(data) {
@@ -3646,12 +3661,18 @@
             // Event listeners para os cards do dashboard
             document.getElementById('card-monthly-movements')?.addEventListener('click', () => openDashboardMovementsModal('monthly'));
             document.getElementById('card-weekly-movements')?.addEventListener('click', () => openDashboardMovementsModal('weekly'));
-            document.getElementById('card-low-stock')?.addEventListener('click', () => toggleVisibility('low-stock-details-wrapper'));
+            // NOVO: Event listener para o card de estoque baixo
+            document.getElementById('card-low-stock')?.addEventListener('click', () => openLowStockModal());
             // REMOVIDO: document.getElementById('card-producao-minima')?.addEventListener('click', () => toggleVisibility('producao-minima-details-wrapper')); // Este card do dashboard
 
             // Event listener para fechar o modal de movimentações do dashboard
             document.getElementById('closeDashboardMovementsModal')?.addEventListener('click', () => {
                 closeModal('dashboardMovementsModal');
+            });
+
+            // NOVO: Event listener para fechar o modal de estoque baixo
+            document.getElementById('closeLowStockModal')?.addEventListener('click', () => {
+                closeModal('lowStockModal');
             });
 
             // Event listeners para as abas de movimentações
@@ -3702,6 +3723,10 @@
                 const currentData = JSON.parse(listContainer.dataset.currentData || '[]');
                 filterTable('search-dashboard-movements', currentData, populateDashboardMovementList, false, false, false, true);
             });
+            // NOVO: Search listener for low stock modal
+            document.getElementById('search-low-stock')?.addEventListener('input', () => {
+                filterTable('search-low-stock', currentLowStockData, populateLowStockTable, false, false, false, false, true);
+            });
 
 
             // Event listeners para ordenação de tabelas
@@ -3727,6 +3752,7 @@
             document.querySelectorAll('#table-producao-minima th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-producao-minima', currentProducaoMinimaData, populateProducaoMinima, header.dataset.sortKey, true));
             });
+            // NOVO: Event listener para ordenação da tabela de estoque baixo dentro do modal
             document.querySelectorAll('#table-low-stock th[data-sort-key]').forEach(header => {
                 header.addEventListener('click', () => sortTable('table-low-stock', currentLowStockData, populateLowStockTable, header.dataset.sortKey));
             });
@@ -3773,6 +3799,7 @@
             document.getElementById('closeCustomConfirmModal').addEventListener('click', () => closeModal('customConfirmModal'));
             document.getElementById('closeProducaoMinimaModal').addEventListener('click', () => closeModal('producaoMinimaModal'));
             document.getElementById('closeDashboardMovementsModal').addEventListener('click', () => closeModal('dashboardMovementsModal'));
+            document.getElementById('closeLowStockModal').addEventListener('click', () => closeModal('lowStockModal')); // NOVO: Fechar modal de estoque baixo
 
 
             // Listener para o estado de autenticação do Firebase
