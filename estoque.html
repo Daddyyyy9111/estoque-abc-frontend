@@ -471,7 +471,7 @@
     <!-- Modal de Produção Mínima de Conjuntos -->
     <div id="producaoMinimaModal" class="modal-overlay hidden">
         <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
-            <button id="closeProducaoMinimaModal" class="modal-close-button" onclick="closeModal('producaoMinimaModal')">&times;</button>
+            <button id="closeProducaoMinimaModal" class="modal-close-button">&times;</button>
             <h3 class="text-2xl font-semibold text-gray-700 mb-6">Mínimo de Conjuntos para Produção</h3>
             <p class="text-gray-600 mb-4 text-sm">Esta tabela mostra a quantidade mínima de conjuntos que podem ser montados para cada modelo CJA e tipo de tampo, com base nos componentes disponíveis em estoque (Assentos, Encostos, Porta-Livros e Tampos MDF/Plástico).</p>
             <div class="overflow-x-auto">
@@ -497,7 +497,7 @@
     <!-- Modal de Movimentações do Dashboard (Mês/Semana) -->
     <div id="dashboardMovementsModal" class="modal-overlay hidden">
         <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
-            <button id="closeDashboardMovementsModal" class="modal-close-button" onclick="closeModal('dashboardMovementsModal')">&times;</button>
+            <button id="closeDashboardMovementsModal" class="modal-close-button">&times;</button>
             <h3 class="text-2xl font-semibold text-gray-700 mb-6" id="dashboardMovementsModalTitle">Detalhes das Movimentações</h3>
             <div class="mb-4">
                 <label for="search-dashboard-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
@@ -659,30 +659,6 @@
                     </div>
                 </div>
 
-                <!-- Produção Mínima Section (Este card agora apenas para visualização de dados no dashboard, o modal é o principal) -->
-                <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-producao-minima">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção Mínima de Conjuntos (Dashboard)</h3>
-                </div>
-                <div id="producao-minima-details-wrapper" class="hidden card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Mínimo de Conjuntos para Produção (Dashboard Detalhes)</h3>
-                    <p class="text-gray-600 mb-4">Esta tabela mostra a quantidade mínima de conjuntos que podem ser montados para cada modelo CJA e tipo de tampo, com base nos componentes disponíveis em estoque (Assentos, Encostos, Porta-Livros e Tampos).</p>
-                    <div class="table-container">
-                        <table id="table-producao-minima">
-                            <thead>
-                                <tr>
-                                    <th data-sort-key="modelo_cja">MODELO CJA</th>
-                                    <th data-sort-key="mdf">MDF</th>
-                                    <th data-sort-key="plastico">PLÁSTICO</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Dados serão inseridos aqui pelo JavaScript -->
-                            </tbody>
-                        </table>
-                        <p id="no-producao-minima-data" class="no-data">Nenhum dado de produção mínima encontrado.</p>
-                    </div>
-                </div>
-
                 <!-- Gráfico de Movimentações Mensais (EXISTENTE) -->
                 <div class="card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Movimentações de Estoque (Últimos 6 Meses)</h3>
@@ -714,8 +690,8 @@
                             </select>
                         </div>
                         <div class="w-full md:w-1/3 flex justify-center md:justify-end gap-2 mt-4 md:mt-0">
-                            <button id="producao-cja-semanal-btn" class="btn-primary" onclick="updateCJAProductionChart('weekly', true)">Semanal</button>
-                            <button id="producao-cja-mensal-btn" class="btn-secondary" onclick="updateCJAProductionChart('monthly', true)">Mensal</button>
+                            <button id="producao-cja-semanal-btn" class="btn-primary">Semanal</button>
+                            <button id="producao-cja-mensal-btn" class="btn-secondary">Mensal</button>
                         </div>
                     </div>
                     <div class="relative h-80 w-full">
@@ -1294,7 +1270,7 @@
     <!-- Modal para Saída Manual -->
     <div id="saidaManualModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="modal-close-button" onclick="closeModal('saidaManualModal')">&times;</button>
+            <button id="closeSaidaManualModal" class="modal-close-button">&times;</button>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Registrar Saída Manual (Pedido/OS)</h3>
             
             <form id="formSaidaManual">
@@ -1365,7 +1341,7 @@
                 <button type="button" id="add-saida-item-button" class="btn-secondary w-full md:w-auto mb-4">Adicionar Mais Item Avulso</button>
 
                 <div class="modal-footer">
-                    <button type="button" onclick="closeModal('saidaManualModal')" class="btn-secondary">Cancelar</button>
+                    <button type="button" id="cancelSaidaManual" class="btn-secondary">Cancelar</button>
                     <button type="submit" class="btn-primary">Registrar Saída</button>
                 </div>
             </form>
@@ -1375,7 +1351,7 @@
     <!-- Modal de Confirmação Personalizado -->
     <div id="customConfirmModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="modal-close-button" onclick="closeModal('customConfirmModal')">&times;</button>
+            <button id="closeCustomConfirmModal" class="modal-close-button">&times;</button>
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4" id="confirmModalTitle">Confirmação</h3>
             <p class="text-gray-700 text-base mb-6" id="confirmModalMessage">Você tem certeza?</p>
             <div class="modal-footer">
@@ -1384,6 +1360,7 @@
             </div>
         </div>
     </div>
+
     <!-- Firebase SDK e Lógica do Aplicativo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1643,11 +1620,11 @@
             }
         }
 
-        // Fix: Ensure openModal and closeModal are globally accessible or defined before use
+        // Funções para abrir e fechar modais
         function openModal(modalId) { 
             const modal = document.getElementById(modalId);
             if (modal) {
-                modal.classList.add('open'); // Usa 'open' para o modal-overlay
+                modal.classList.add('open');
                 modal.classList.remove('hidden');
             } else {
                 console.error(`Elemento de modal com ID ${modalId} não encontrado.`);
@@ -2535,9 +2512,18 @@
 
                 itemDiv.innerHTML = `
                     <span class="font-medium">${itemDisplay}</span>
-                    <button type="button" onclick="removeConjuntoItem(this)" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
+                    <button type="button" data-item-index="${index}" class="text-red-500 hover:text-red-700 ml-2 remove-conjunto-item-btn">&times;</button>
                 `;
                 container.appendChild(itemDiv);
+            });
+
+            // Adiciona event listeners para os botões de remover conjunto
+            container.querySelectorAll('.remove-conjunto-item-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const indexToRemove = parseInt(event.target.dataset.itemIndex);
+                    saidaConjuntoItems.splice(indexToRemove, 1);
+                    updateConjuntoItemsDisplay(type);
+                };
             });
         }
 
@@ -2574,7 +2560,7 @@
                         <label for="${type}AvulsaQuantidade${index}" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
                         <input type="number" id="${type}AvulsaQuantidade${index}" class="input-field w-full" min="1" value="${item.quantidade}">
                     </div>
-                    <button type="button" onclick="removeDynamicItem(this, '${type}')" class="btn-secondary p-2 rounded-md">X</button>
+                    <button type="button" data-item-index="${index}" data-type-prefix="${type}" class="btn-secondary p-2 rounded-md remove-dynamic-item-btn">X</button>
                 `;
                 container.appendChild(itemDiv);
 
@@ -2586,6 +2572,20 @@
                 quantityInput.addEventListener('input', () => {
                     itemsArray[index].quantidade = parseInt(quantityInput.value) || 0;
                 });
+            });
+
+            // Adiciona event listeners para os botões de remover item avulso
+            container.querySelectorAll('.remove-dynamic-item-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const indexToRemove = parseInt(event.target.dataset.itemIndex);
+                    const typePrefix = event.target.dataset.typePrefix;
+                    if (typePrefix === 'reajuste') {
+                        reajusteAvulsaItems.splice(indexToRemove, 1);
+                    } else if (typePrefix === 'saida') {
+                        saidaAvulsaItems.splice(indexToRemove, 1);
+                    }
+                    updateAvulsaItemsDisplay(typePrefix);
+                };
             });
         }
 
@@ -3404,6 +3404,9 @@
             // Event listeners para o novo gráfico de produção CJA
             document.getElementById('selectCJA').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
             document.getElementById('selectTampo').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
+            document.getElementById('producao-cja-semanal-btn').addEventListener('click', () => updateCJAProductionChart('weekly', true));
+            document.getElementById('producao-cja-mensal-btn').addEventListener('click', () => updateCJAProductionChart('monthly', true));
+
 
             // Event listeners para os botões de adicionar item avulso (reajuste)
             document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
@@ -3568,7 +3571,7 @@
             document.getElementById('card-monthly-movements')?.addEventListener('click', () => openDashboardMovementsModal('monthly'));
             document.getElementById('card-weekly-movements')?.addEventListener('click', () => openDashboardMovementsModal('weekly'));
             document.getElementById('card-low-stock')?.addEventListener('click', () => toggleVisibility('low-stock-details-wrapper'));
-            document.getElementById('card-producao-minima')?.addEventListener('click', () => toggleVisibility('producao-minima-details-wrapper')); // Este card do dashboard
+            // REMOVIDO: document.getElementById('card-producao-minima')?.addEventListener('click', () => toggleVisibility('producao-minima-details-wrapper')); // Este card do dashboard
 
             // Event listener para fechar o modal de movimentações do dashboard
             document.getElementById('closeDashboardMovementsModal')?.addEventListener('click', () => {
@@ -3687,6 +3690,14 @@
                 closeModal('customConfirmModal'); // Usa a função closeModal
                 confirmActionCallback = null; 
             });
+
+            // Adiciona event listeners para os botões de fechar modais (agora programaticamente)
+            document.getElementById('closeSaidaManualModal').addEventListener('click', () => closeModal('saidaManualModal'));
+            document.getElementById('cancelSaidaManual').addEventListener('click', () => closeModal('saidaManualModal'));
+            document.getElementById('closeCustomConfirmModal').addEventListener('click', () => closeModal('customConfirmModal'));
+            document.getElementById('closeProducaoMinimaModal').addEventListener('click', () => closeModal('producaoMinimaModal'));
+            document.getElementById('closeDashboardMovementsModal').addEventListener('click', () => closeModal('dashboardMovementsModal'));
+
 
             // Listener para o estado de autenticação do Firebase
             onAuthStateChanged(auth, async (user) => {
