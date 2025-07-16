@@ -794,36 +794,40 @@
                 <div class="card mt-6" id="reajuste-componentes-card">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Reajuste de Componentes</h3>
                     <form id="formReajusteEstoque">
-                        <label for="reajusteTipoOperacao" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Operação:</label>
-                        <select id="reajusteTipoOperacao" name="tipo_operacao" class="select-field" required>
-                            <option value="">Selecione</option>
-                            <option value="adicionar">Adicionar ao Estoque</option>
-                            <option value="retirar">Retirar do Estoque</option>
-                        </select>
-                        <p id="reajusteTipoOperacao-validation" class="validation-message">Campo obrigatório.</p>
-
-                        <div id="reajusteDescricaoContainer" class="hidden">
-                            <label for="reajusteDescricao" class="block text-gray-700 text-sm font-bold mb-2">Descrição (Ex: Nota Fiscal, Ajuste):</label>
-                            <input type="text" id="reajusteDescricao" name="descricao" class="input-field" placeholder="Ex: Compra de componentes - Nota Fiscal #XYZ">
-                            <p id="reajusteDescricao-validation" class="validation-message">Campo obrigatório para adição.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="reajusteTipoOperacao" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Operação:</label>
+                                <select id="reajusteTipoOperacao" name="tipo_operacao" class="select-field" required>
+                                    <option value="">Selecione</option>
+                                    <option value="adicionar">Adicionar ao Estoque</option>
+                                    <option value="retirar">Retirar do Estoque</option>
+                                </select>
+                                <p id="reajusteTipoOperacao-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div id="reajusteDescricaoContainer" class="hidden">
+                                <label for="reajusteDescricao" class="block text-gray-700 text-sm font-bold mb-2">Descrição (Ex: Nota Fiscal, Ajuste):</label>
+                                <input type="text" id="reajusteDescricao" name="descricao" class="input-field" placeholder="Ex: Compra de componentes - Nota Fiscal #XYZ">
+                                <p id="reajusteDescricao-validation" class="validation-message">Campo obrigatório para adição.</p>
+                            </div>
                         </div>
 
-                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Componente para Reajuste:</h4>
-                        <div class="mb-4">
-                            <label for="reajusteComponente" class="block text-gray-700 text-sm font-bold mb-1">Componente:</label>
-                            <select id="reajusteComponente" name="componente" class="select-field" required>
-                                <option value="">Selecione o Componente</option>
-                                <!-- Opções serão populadas via JavaScript -->
-                            </select>
-                            <p id="reajusteComponente-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="reajusteQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
-                            <input type="number" id="reajusteQuantidade" name="quantidade" class="input-field" min="1" value="1" required>
-                            <p id="reajusteQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="reajusteComponente" class="block text-gray-700 text-sm font-bold mb-1">Componente para Reajuste:</label>
+                                <select id="reajusteComponente" name="componente" class="select-field" required>
+                                    <option value="">Selecione o Componente</option>
+                                    <!-- Opções serão populadas via JavaScript -->
+                                </select>
+                                <p id="reajusteComponente-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="reajusteQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
+                                <input type="number" id="reajusteQuantidade" name="quantidade" class="input-field" min="1" value="1" required>
+                                <p id="reajusteQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            </div>
                         </div>
 
-                        <div class="modal-footer">
+                        <div class="modal-footer justify-center">
                             <button type="submit" class="btn-primary">Registrar Reajuste</button>
                         </div>
                     </form>
@@ -864,40 +868,44 @@
                 <div class="card mt-6" id="add-conjuntos-prontos-local-card">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Adicionar Conjuntos Prontos ao Estoque Local (ABC)</h3>
                     <form id="formAddConjuntosProntosLocal">
-                        <div class="mb-4">
-                            <label for="addConjuntosTipoCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                            <select id="addConjuntosTipoCJALocal" name="tipo_cja" class="select-field" required>
-                                <option value="">Selecione o Tipo</option>
-                                <option value="ZURICH">ZURICH</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="addConjuntosTipoCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="addConjuntosTipoCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
+                                <select id="addConjuntosTipoCJALocal" name="tipo_cja" class="select-field" required>
+                                    <option value="">Selecione o Tipo</option>
+                                    <option value="ZURICH">ZURICH</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="addConjuntosTipoCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="addConjuntosModeloCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
+                                <select id="addConjuntosModeloCJALocal" name="modelo_cja" class="select-field" required>
+                                    <option value="">Selecione o Modelo</option>
+                                    <option value="CJA-06">CJA-06</option>
+                                    <option value="CJA-05">CJA-05</option>
+                                    <option value="CJA-04">CJA-04</option>
+                                    <option value="CJA-03">CJA-03</option>
+                                </select>
+                                <p id="addConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosModeloCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                            <select id="addConjuntosModeloCJALocal" name="modelo_cja" class="select-field" required>
-                                <option value="">Selecione o Modelo</option>
-                                <option value="CJA-06">CJA-06</option>
-                                <option value="CJA-05">CJA-05</option>
-                                <option value="CJA-04">CJA-04</option>
-                                <option value="CJA-03">CJA-03</option>
-                            </select>
-                            <p id="addConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosTampoTipoLocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
-                            <select id="addConjuntosTampoTipoLocal" name="tampo_tipo" class="select-field" required>
-                                <option value="">Selecione o Tampo</option>
-                                <option value="MDF">MDF</option>
-                                <option value="PLASTICO">PLÁSTICO</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="addConjuntosTampoTipoLocal-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosQuantidadeLocal" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
-                            <input type="number" id="addConjuntosQuantidadeLocal" name="quantidade" class="input-field" min="1" value="1" required>
-                            <p id="addConjuntosQuantidadeLocal-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="addConjuntosTampoTipoLocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                                <select id="addConjuntosTampoTipoLocal" name="tampo_tipo" class="select-field" required>
+                                    <option value="">Selecione o Tampo</option>
+                                    <option value="MDF">MDF</option>
+                                    <option value="PLASTICO">PLÁSTICO</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="addConjuntosTampoTipoLocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="addConjuntosQuantidadeLocal" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
+                                <input type="number" id="addConjuntosQuantidadeLocal" name="quantidade" class="input-field" min="1" value="1" required>
+                                <p id="addConjuntosQuantidadeLocal-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            </div>
                         </div>
                         <div class="modal-footer justify-center">
                             <button type="submit" class="btn-primary">Registrar Produção Local</button>
@@ -909,40 +917,44 @@
                 <div class="card mt-6" id="retirar-conjuntos-prontos-local-card">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Retirar Conjuntos Prontos do Estoque Local (ABC)</h3>
                     <form id="formRetirarConjuntosProntosLocal">
-                        <div class="mb-4">
-                            <label for="retirarConjuntosTipoCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                            <select id="retirarConjuntosTipoCJALocal" name="tipo_cja" class="select-field" required>
-                                <option value="">Selecione o Tipo</option>
-                                <option value="ZURICH">ZURICH</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="retirarConjuntosTipoCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="retirarConjuntosTipoCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
+                                <select id="retirarConjuntosTipoCJALocal" name="tipo_cja" class="select-field" required>
+                                    <option value="">Selecione o Tipo</option>
+                                    <option value="ZURICH">ZURICH</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="retirarConjuntosTipoCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="retirarConjuntosModeloCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
+                                <select id="retirarConjuntosModeloCJALocal" name="modelo_cja" class="select-field" required>
+                                    <option value="">Selecione o Modelo</option>
+                                    <option value="CJA-06">CJA-06</option>
+                                    <option value="CJA-05">CJA-05</option>
+                                    <option value="CJA-04">CJA-04</option>
+                                    <option value="CJA-03">CJA-03</option>
+                                </select>
+                                <p id="retirarConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosModeloCJALocal" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                            <select id="retirarConjuntosModeloCJALocal" name="modelo_cja" class="select-field" required>
-                                <option value="">Selecione o Modelo</option>
-                                <option value="CJA-06">CJA-06</option>
-                                <option value="CJA-05">CJA-05</option>
-                                <option value="CJA-04">CJA-04</option>
-                                <option value="CJA-03">CJA-03</option>
-                            </select>
-                            <p id="retirarConjuntosModeloCJALocal-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosTampoTipoLocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
-                            <select id="retirarConjuntosTampoTipoLocal" name="tampo_tipo" class="select-field" required>
-                                <option value="">Selecione o Tampo</option>
-                                <option value="MDF">MDF</option>
-                                <option value="PLASTICO">PLÁSTICO</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="retirarConjuntosTampoTipoLocal-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosQuantidadeLocal" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
-                            <input type="number" id="retirarConjuntosQuantidadeLocal" name="quantidade" class="input-field" min="1" value="1" required>
-                            <p id="retirarConjuntosQuantidadeLocal-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="retirarConjuntosTampoTipoLocal" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                                <select id="retirarConjuntosTampoTipoLocal" name="tampo_tipo" class="select-field" required>
+                                    <option value="">Selecione o Tampo</option>
+                                    <option value="MDF">MDF</option>
+                                    <option value="PLASTICO">PLÁSTICO</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="retirarConjuntosTampoTipoLocal-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="retirarConjuntosQuantidadeLocal" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
+                                <input type="number" id="retirarConjuntosQuantidadeLocal" name="quantidade" class="input-field" min="1" value="1" required>
+                                <p id="retirarConjuntosQuantidadeLocal-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            </div>
                         </div>
                         <div class="modal-footer justify-center">
                             <button type="submit" class="btn-secondary">Retirar do Estoque Local</button>
@@ -985,40 +997,44 @@
                 <div class="card mt-6" id="add-conjuntos-prontos-distrito-card">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Adicionar Conjuntos Prontos ao Estoque Distrito</h3>
                     <form id="formAddConjuntosProntosDistrito">
-                        <div class="mb-4">
-                            <label for="addConjuntosTipoCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                            <select id="addConjuntosTipoCJADistrito" name="tipo_cja" class="select-field" required>
-                                <option value="">Selecione o Tipo</option>
-                                <option value="ZURICH">ZURICH</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="addConjuntosTipoCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="addConjuntosTipoCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
+                                <select id="addConjuntosTipoCJADistrito" name="tipo_cja" class="select-field" required>
+                                    <option value="">Selecione o Tipo</option>
+                                    <option value="ZURICH">ZURICH</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="addConjuntosTipoCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="addConjuntosModeloCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
+                                <select id="addConjuntosModeloCJADistrito" name="modelo_cja" class="select-field" required>
+                                    <option value="">Selecione o Modelo</option>
+                                    <option value="CJA-06">CJA-06</option>
+                                    <option value="CJA-05">CJA-05</option>
+                                    <option value="CJA-04">CJA-04</option>
+                                    <option value="CJA-03">CJA-03</option>
+                                </select>
+                                <p id="addConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosModeloCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                            <select id="addConjuntosModeloCJADistrito" name="modelo_cja" class="select-field" required>
-                                <option value="">Selecione o Modelo</option>
-                                <option value="CJA-06">CJA-06</option>
-                                <option value="CJA-05">CJA-05</option>
-                                <option value="CJA-04">CJA-04</option>
-                                <option value="CJA-03">CJA-03</option>
-                            </select>
-                            <p id="addConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosTampoTipoDistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
-                            <select id="addConjuntosTampoTipoDistrito" name="tampo_tipo" class="select-field" required>
-                                <option value="">Selecione o Tampo</option>
-                                <option value="MDF">MDF</option>
-                                <option value="PLASTICO">PLÁSTICO</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="addConjuntosTampoTipoDistrito-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="addConjuntosQuantidadeDistrito" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
-                            <input type="number" id="addConjuntosQuantidadeDistrito" name="quantidade" class="input-field" min="1" value="1" required>
-                            <p id="addConjuntosQuantidadeDistrito-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="addConjuntosTampoTipoDistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                                <select id="addConjuntosTampoTipoDistrito" name="tampo_tipo" class="select-field" required>
+                                    <option value="">Selecione o Tampo</option>
+                                    <option value="MDF">MDF</option>
+                                    <option value="PLASTICO">PLÁSTICO</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="addConjuntosTampoTipoDistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="addConjuntosQuantidadeDistrito" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
+                                <input type="number" id="addConjuntosQuantidadeDistrito" name="quantidade" class="input-field" min="1" value="1" required>
+                                <p id="addConjuntosQuantidadeDistrito-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            </div>
                         </div>
                         <div class="modal-footer justify-center">
                             <button type="submit" class="btn-primary">Registrar Produção Distrito</button>
@@ -1030,40 +1046,44 @@
                 <div class="card mt-6" id="retirar-conjuntos-prontos-distrito-card">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Retirar Conjuntos Prontos do Estoque Distrito</h3>
                     <form id="formRetirarConjuntosProntosDistrito">
-                        <div class="mb-4">
-                            <label for="retirarConjuntosTipoCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                            <select id="retirarConjuntosTipoCJADistrito" name="tipo_cja" class="select-field" required>
-                                <option value="">Selecione o Tipo</option>
-                                <option value="ZURICH">ZURICH</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="retirarConjuntosTipoCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="retirarConjuntosTipoCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
+                                <select id="retirarConjuntosTipoCJADistrito" name="tipo_cja" class="select-field" required>
+                                    <option value="">Selecione o Tipo</option>
+                                    <option value="ZURICH">ZURICH</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="retirarConjuntosTipoCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="retirarConjuntosModeloCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
+                                <select id="retirarConjuntosModeloCJADistrito" name="modelo_cja" class="select-field" required>
+                                    <option value="">Selecione o Modelo</option>
+                                    <option value="CJA-06">CJA-06</option>
+                                    <option value="CJA-05">CJA-05</option>
+                                    <option value="CJA-04">CJA-04</option>
+                                    <option value="CJA-03">CJA-03</option>
+                                </select>
+                                <p id="retirarConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosModeloCJADistrito" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                            <select id="retirarConjuntosModeloCJADistrito" name="modelo_cja" class="select-field" required>
-                                <option value="">Selecione o Modelo</option>
-                                <option value="CJA-06">CJA-06</option>
-                                <option value="CJA-05">CJA-05</option>
-                                <option value="CJA-04">CJA-04</option>
-                                <option value="CJA-03">CJA-03</option>
-                            </select>
-                            <p id="retirarConjuntosModeloCJADistrito-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosTampoTipoDistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
-                            <select id="retirarConjuntosTampoTipoDistrito" name="tampo_tipo" class="select-field" required>
-                                <option value="">Selecione o Tampo</option>
-                                <option value="MDF">MDF</option>
-                                <option value="PLASTICO">PLÁSTICO</option>
-                                <option value="MASTICMOL">MASTICMOL</option>
-                            </select>
-                            <p id="retirarConjuntosTampoTipoDistrito-validation" class="validation-message">Campo obrigatório.</p>
-                        </div>
-                        <div class="mb-4">
-                            <label for="retirarConjuntosQuantidadeDistrito" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
-                            <input type="number" id="retirarConjuntosQuantidadeDistrito" name="quantidade" class="input-field" min="1" value="1" required>
-                            <p id="retirarConjuntosQuantidadeDistrito-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="retirarConjuntosTampoTipoDistrito" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                                <select id="retirarConjuntosTampoTipoDistrito" name="tampo_tipo" class="select-field" required>
+                                    <option value="">Selecione o Tampo</option>
+                                    <option value="MDF">MDF</option>
+                                    <option value="PLASTICO">PLÁSTICO</option>
+                                    <option value="MASTICMOL">MASTICMOL</option>
+                                </select>
+                                <p id="retirarConjuntosTampoTipoDistrito-validation" class="validation-message">Campo obrigatório.</p>
+                            </div>
+                            <div>
+                                <label for="retirarConjuntosQuantidadeDistrito" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
+                                <input type="number" id="retirarConjuntosQuantidadeDistrito" name="quantidade" class="input-field" min="1" value="1" required>
+                                <p id="retirarConjuntosQuantidadeDistrito-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                            </div>
                         </div>
                         <div class="modal-footer justify-center">
                             <button type="submit" class="btn-secondary">Retirar do Estoque Distrito</button>
@@ -1282,52 +1302,63 @@
             <h3 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Registrar Saída Manual (Pedido/OS)</h3>
             
             <form id="formSaidaManual">
-                <label for="saidaOsNumber" class="block text-gray-700 text-sm font-bold mb-2">Número da OS:</label>
-                <input type="text" id="saidaOsNumber" name="os_number" class="input-field" placeholder="Ex: OS12345" required>
-                <p id="saidaOsNumber-validation" class="validation-message">Campo obrigatório.</p>
-
-                <label for="saidaCidadeDestino" class="block text-gray-700 text-sm font-bold mb-2">Cidade de Destino:</label>
-                <input type="text" id="saidaCidadeDestino" name="cidade_destino" class="input-field" placeholder="Ex: São Paulo" required>
-                <p id="saidaCidadeDestino-validation" class="validation-message">Campo obrigatório.</p>
-
-                <label for="saidaDataEmissao" class="block text-gray-700 text-sm font-bold mb-2">Data de Emissão:</label>
-                <input type="date" id="saidaDataEmissao" name="data_emissao" class="input-field" required>
-                <p id="saidaDataEmissao-validation" class="validation-message">Campo obrigatório.</p>
-
-                <label for="saidaPrazoEntrega" class="block text-gray-700 text-sm font-bold mb-2">Prazo de Entrega:</label>
-                <input type="date" id="saidaPrazoEntrega" name="prazo_entrega" class="input-field" required>
-                <p id="saidaPrazoEntrega-validation" class="validation-message">Campo obrigatório.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="saidaOsNumber" class="block text-gray-700 text-sm font-bold mb-2">Número da OS:</label>
+                        <input type="text" id="saidaOsNumber" name="os_number" class="input-field" placeholder="Ex: OS12345" required>
+                        <p id="saidaOsNumber-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="saidaCidadeDestino" class="block text-gray-700 text-sm font-bold mb-2">Cidade de Destino:</label>
+                        <input type="text" id="saidaCidadeDestino" name="cidade_destino" class="input-field" placeholder="Ex: São Paulo" required>
+                        <p id="saidaCidadeDestino-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="saidaDataEmissao" class="block text-gray-700 text-sm font-bold mb-2">Data de Emissão:</label>
+                        <input type="date" id="saidaDataEmissao" name="data_emissao" class="input-field" required>
+                        <p id="saidaDataEmissao-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="saidaPrazoEntrega" class="block text-gray-700 text-sm font-bold mb-2">Prazo de Entrega:</label>
+                        <input type="date" id="saidaPrazoEntrega" name="prazo_entrega" class="input-field" required>
+                        <p id="saidaPrazoEntrega-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                </div>
 
                 <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar Conjuntos Prontos ao Pedido:</h4>
-                <div class="mb-4">
-                    <label for="saidaConjuntoTipoCJA" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
-                    <select id="saidaConjuntoTipoCJA" class="select-field">
-                        <option value="">Selecione o Tipo</option>
-                        <option value="ZURICH">ZURICH</option>
-                        <option value="MASTICMOL">MASTICMOL</option>
-                    </select>
-                    <p id="saidaConjuntoTipoCJA-validation" class="validation-message">Campo obrigatório.</p>
-                </div>
-                <div class="mb-4">
-                    <label for="saidaConjuntoModeloCJA" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
-                    <select id="saidaConjuntoModeloCJA" class="select-field">
-                        <option value="">Selecione o Modelo</option>
-                        <option value="CJA-06">CJA-06</option>
-                        <option value="CJA-05">CJA-05</option>
-                        <option value="CJA-04">CJA-04</option>
-                        <option value="CJA-03">CJA-03</option>
-                    </select>
-                    <p id="saidaConjuntoModeloCJA-validation" class="validation-message">Campo obrigatório.</p>
-                </div>
-                <div class="mb-4">
-                    <label for="saidaConjuntoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
-                    <select id="saidaConjuntoTampo" class="select-field">
-                        <option value="">Selecione o Tampo</option>
-                        <option value="MDF">MDF</option>
-                        <option value="PLASTICO">PLÁSTICO</option>
-                        <option value="MASTICMOL">MASTICMOL</option>
-                    </select>
-                    <p id="saidaConjuntoTampo-validation" class="validation-message">Campo obrigatório.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label for="saidaConjuntoTipoCJA" class="block text-gray-700 text-sm font-bold mb-1">Tipo de CJA:</label>
+                        <select id="saidaConjuntoTipoCJA" class="select-field">
+                            <option value="">Selecione o Tipo</option>
+                            <option value="ZURICH">ZURICH</option>
+                            <option value="MASTICMOL">MASTICMOL</option>
+                        </select>
+                        <p id="saidaConjuntoTipoCJA-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="saidaConjuntoModeloCJA" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
+                        <select id="saidaConjuntoModeloCJA" class="select-field">
+                            <option value="">Selecione o Modelo</option>
+                            <option value="CJA-06">CJA-06</option>
+                            <option value="CJA-05">CJA-05</option>
+                            <option value="CJA-04">CJA-04</option>
+                            <option value="CJA-03">CJA-03</option>
+                        </select>
+                        <p id="saidaConjuntoModeloCJA-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="saidaConjuntoTampo" class="block text-gray-700 text-sm font-bold mb-1">Tipo de Tampo:</label>
+                        <select id="saidaConjuntoTampo" class="select-field">
+                            <option value="">Selecione o Tampo</option>
+                            <option value="MDF">MDF</option>
+                            <option value="PLASTICO">PLÁSTICO</option>
+                            <option value="MASTICMOL">MASTICMOL</option>
+                        </select>
+                        <p id="saidaConjuntoTampo-validation" class="validation-message">Campo obrigatório.</p>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label for="saidaConjuntoQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade de Conjuntos:</label>
