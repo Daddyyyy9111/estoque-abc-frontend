@@ -808,12 +808,20 @@
                             <p id="reajusteDescricao-validation" class="validation-message">Campo obrigatório para adição.</p>
                         </div>
 
-                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Adicionar/Remover Itens Avulsos:</h4>
-                        <div id="reajusteAvulsaItemsContainer">
-                            <!-- Itens avulsos serão adicionados aqui dinamicamente pelo JavaScript -->
-                            <p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>
+                        <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Componente para Reajuste:</h4>
+                        <div class="mb-4">
+                            <label for="reajusteComponente" class="block text-gray-700 text-sm font-bold mb-1">Componente:</label>
+                            <select id="reajusteComponente" name="componente" class="select-field" required>
+                                <option value="">Selecione o Componente</option>
+                                <!-- Opções serão populadas via JavaScript -->
+                            </select>
+                            <p id="reajusteComponente-validation" class="validation-message">Campo obrigatório.</p>
                         </div>
-                        <button type="button" id="add-reajuste-avulsa-item-button" class="btn-secondary w-full md:w-auto mb-4">Adicionar Mais Item Avulso</button>
+                        <div class="mb-4">
+                            <label for="reajusteQuantidade" class="block text-gray-700 text-sm font-bold mb-1">Quantidade:</label>
+                            <input type="number" id="reajusteQuantidade" name="quantidade" class="input-field" min="1" value="1" required>
+                            <p id="reajusteQuantidade-validation" class="validation-message">Quantidade deve ser maior que 0.</p>
+                        </div>
 
                         <div class="modal-footer">
                             <button type="submit" class="btn-primary">Registrar Reajuste</button>
@@ -1432,7 +1440,7 @@
         let cjaProductionChartInstance = null;
 
         // Variáveis para os itens de reajuste/saída manual
-        let reajusteAvulsaItems = []; // Para itens avulsos no reajuste
+        // reajusteAvulsaItems não é mais necessário para o reajuste de componentes
         let saidaConjuntoItems = []; // Para conjuntos prontos na saída manual
         let saidaAvulsaItems = []; // Para itens avulsos na saída manual
 
@@ -2135,7 +2143,7 @@
                         <td class="py-3 px-6 text-left">${mov.os_number}</td>
                         <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
-                            <button onclick="showOrderDetailsModal('${mov.os_number}', ${escape(JSON.stringify(mov.itens))}, '${mov.cidade_destino}', '${mov.data_emissao}', '${mov.prazo_entrega}')" class="text-indigo-500 hover:underline">
+                            <button data-os-number="${mov.os_number}" data-itens="${escape(JSON.stringify(mov.itens))}" data-cidade-destino="${mov.cidade_destino}" data-data-emissao="${mov.data_emissao}" data-prazo-entrega="${mov.prazo_entrega}" class="text-indigo-500 hover:underline show-order-details-btn">
                                 ${conjuntosPedidos}
                             </button>
                         </td>
@@ -2176,6 +2184,18 @@
             if (noSaidasData) noSaidasData.style.display = hasSaidas ? 'none' : 'block';
             if (noEntradasData) noEntradasData.style.display = hasEntradas ? 'none' : 'block';
             if (noProducaoData) noProducaoData.style.display = hasProducao ? 'none' : 'block';
+
+            // Adiciona event listeners para os botões de detalhes de ordem
+            document.querySelectorAll('.show-order-details-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const osNumber = event.target.dataset.osNumber;
+                    const itens = JSON.parse(unescape(event.target.dataset.itens));
+                    const cidadeDestino = event.target.dataset.cidadeDestino;
+                    const dataEmissao = event.target.dataset.dataEmissao;
+                    const prazoEntrega = event.target.dataset.prazoEntrega;
+                    showOrderDetailsModal(osNumber, itens, cidadeDestino, dataEmissao, prazoEntrega);
+                });
+            });
         }
 
         async function loadDashboardData() {
@@ -2435,26 +2455,22 @@
         }
 
         // Função para adicionar um item avulso ao container (reajuste ou saída)
+        // Esta função agora é usada apenas para 'saida'
         function addManualItem(typePrefix) {
-            // Add a new item to the array, with default values
+            if (typePrefix !== 'saida') {
+                console.error("Tipo de prefixo inválido para addManualItem:", typePrefix);
+                return;
+            }
             const newItem = {
                 componente: '',
                 quantidade: 1
             };
-            let itemsArray;
-            if (typePrefix === 'reajuste') {
-                itemsArray = reajusteAvulsaItems;
-            } else if (typePrefix === 'saida') {
-                itemsArray = saidaAvulsaItems;
-            } else {
-                console.error("Tipo de prefixo inválido para addManualItem:", typePrefix);
-                return;
-            }
-            itemsArray.push(newItem);
+            saidaAvulsaItems.push(newItem);
             updateAvulsaItemsDisplay(typePrefix); 
         }
 
         // Função para remover um item avulso do container
+        // Esta função agora é usada apenas para 'saida'
         function removeDynamicItem(buttonElement, typePrefix) {
             const itemDiv = buttonElement.closest('div.flex.items-end');
             if (itemDiv) {
@@ -2463,9 +2479,7 @@
                     console.error("Invalid data-index for item removal.");
                     return;
                 }
-                if (typePrefix === 'reajuste') {
-                    reajusteAvulsaItems.splice(index, 1);
-                } else if (typePrefix === 'saida') {
+                if (typePrefix === 'saida') {
                     saidaAvulsaItems.splice(index, 1);
                 }
                 updateAvulsaItemsDisplay(typePrefix); 
@@ -2519,15 +2533,16 @@
 
             // Adiciona event listeners para os botões de remover conjunto
             container.querySelectorAll('.remove-conjunto-item-btn').forEach(button => {
-                button.onclick = (event) => {
+                button.addEventListener('click', (event) => {
                     const indexToRemove = parseInt(event.target.dataset.itemIndex);
                     saidaConjuntoItems.splice(indexToRemove, 1);
                     updateConjuntoItemsDisplay(type);
-                };
+                });
             });
         }
 
         // Atualiza a exibição dos itens avulsos adicionados (reajuste ou saída)
+        // Esta função agora é usada apenas para 'saida'
         function updateAvulsaItemsDisplay(type) {
             const container = document.getElementById(`${type}ManualItemsContainer`);
             if (!container) {
@@ -2536,7 +2551,7 @@
             }
             container.innerHTML = ''; 
 
-            let itemsArray = (type === 'reajuste') ? reajusteAvulsaItems : saidaAvulsaItems;
+            let itemsArray = (type === 'saida') ? saidaAvulsaItems : [];
             
             if (itemsArray.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum item avulso adicionado ainda.</p>';
@@ -2576,16 +2591,14 @@
 
             // Adiciona event listeners para os botões de remover item avulso
             container.querySelectorAll('.remove-dynamic-item-btn').forEach(button => {
-                button.onclick = (event) => {
+                button.addEventListener('click', (event) => {
                     const indexToRemove = parseInt(event.target.dataset.itemIndex);
                     const typePrefix = event.target.dataset.typePrefix;
-                    if (typePrefix === 'reajuste') {
-                        reajusteAvulsaItems.splice(indexToRemove, 1);
-                    } else if (typePrefix === 'saida') {
+                    if (typePrefix === 'saida') {
                         saidaAvulsaItems.splice(indexToRemove, 1);
                     }
                     updateAvulsaItemsDisplay(typePrefix);
-                };
+                });
             });
         }
 
@@ -2630,6 +2643,22 @@
                 const option = document.createElement('option');
                 option.value = model;
                 option.textContent = model;
+                selectElement.appendChild(option);
+            });
+        }
+
+        // Nova função para popular o dropdown de componentes (para reajuste)
+        function populateComponentsDropdown(selectId, componentsArray) {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) {
+                console.error(`Elemento select com ID ${selectId} não encontrado.`);
+                return;
+            }
+            selectElement.innerHTML = '<option value="">Selecione o Componente</option>';
+            componentsArray.forEach(component => {
+                const option = document.createElement('option');
+                option.value = component;
+                option.textContent = component;
                 selectElement.appendChild(option);
             });
         }
@@ -2974,7 +3003,7 @@
                         <td class="py-3 px-6 text-left">${user.role || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
                             ${user.username !== currentUser.username ? 
-                                `<button onclick="confirmAction('Tem certeza que deseja deletar o usuário \\'${user.username}\\'?', () => deleteUser('${user.username}'))" class="text-red-500 hover:underline">Deletar</button>` 
+                                `<button data-username="${user.username}" class="text-red-500 hover:underline delete-user-btn">Deletar</button>` 
                                 : '<span class="text-gray-400">Você</span>'}
                         </td>
                     `;
@@ -2984,6 +3013,14 @@
             } else {
                 noUsersData.style.display = 'block';
             }
+
+            // Adiciona event listeners para os botões de deletar usuário
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const usernameToDelete = event.target.dataset.username;
+                    confirmAction(`Tem certeza que deseja deletar o usuário '${usernameToDelete}'?`, () => deleteUser(usernameToDelete));
+                });
+            });
         }
 
         async function createUser() { 
@@ -3119,13 +3156,13 @@
                         <td class="py-3 px-6 text-left">${updatedDate}</td>
                         <td class="py-3 px-6 text-left">${order.updated_by || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
-                            <select onchange="updatePendingOrderStatus('${order.id}', this.value)" class="select-field text-sm p-1">
+                            <select data-order-id="${order.id}" class="select-field text-sm p-1 update-pending-order-status-btn">
                                 <option value="">Mudar Status</option>
                                 <option value="Pendente" ${order.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
                                 <option value="Produzindo" ${order.status === 'Produzindo' ? 'selected' : ''}>Produzindo</option>
                                 <option value="Feito" ${order.status === 'Feito' ? 'selected' : ''}>Feito</option>
                             </select>
-                            <button onclick="confirmAction('Tem certeza que deseja deletar este pedido pendente?', () => deletePedidoPendente('${order.id}'))" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs ml-2"><i class="fas fa-trash"></i> Deletar</button>
+                            <button data-order-id="${order.id}" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs ml-2 delete-pending-order-btn"><i class="fas fa-trash"></i> Deletar</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -3134,6 +3171,21 @@
             } else {
                 noDataElement.style.display = 'block';
             }
+
+            // Adiciona event listeners para os botões de status e deletar pedido pendente
+            document.querySelectorAll('.update-pending-order-status-btn').forEach(select => {
+                select.addEventListener('change', (event) => {
+                    const orderId = event.target.dataset.orderId;
+                    const newStatus = event.target.value;
+                    updatePendingOrderStatus(orderId, newStatus);
+                });
+            });
+            document.querySelectorAll('.delete-pending-order-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const orderId = event.target.dataset.orderId;
+                    confirmAction('Tem certeza que deseja deletar este pedido pendente?', () => deletePedidoPendente(orderId));
+                });
+            });
         }
 
         async function deletePedidoPendente(id) {
@@ -3379,6 +3431,9 @@
                 }
             });
 
+            // Popula o dropdown de componentes para o reajuste
+            populateComponentsDropdown('reajusteComponente', ALL_COMPONENTS);
+
             // Popula dropdowns para formulários de adicionar/retirar conjuntos
             populateCJATypesDropdown('addConjuntosTipoCJALocal', CJA_TYPES);
             populateCJAModelsDropdown('addConjuntosModeloCJALocal', CJA_MODELS);
@@ -3408,11 +3463,6 @@
             document.getElementById('producao-cja-mensal-btn').addEventListener('click', () => updateCJAProductionChart('monthly', true));
 
 
-            // Event listeners para os botões de adicionar item avulso (reajuste)
-            document.getElementById('add-reajuste-avulsa-item-button').addEventListener('click', () => {
-                addManualItem('reajuste');
-            });
-
             // Event listener para o formulário de Reajuste de Estoque
             document.getElementById('formReajusteEstoque')?.addEventListener('submit', async function(event) {
                 event.preventDefault();
@@ -3423,37 +3473,32 @@
 
                 const tipoOperacao = document.getElementById('reajusteTipoOperacao').value;
                 const descricao = document.getElementById('reajusteDescricao').value;
+                const componente = document.getElementById('reajusteComponente').value;
+                const quantidade = parseInt(document.getElementById('reajusteQuantidade').value);
 
-                if (reajusteAvulsaItems.length === 0) {
-                    showToast('Por favor, adicione pelo menos um item avulso para o reajuste.', 'error');
-                    return;
-                }
-
-                // Valida os itens avulsos
-                let allItemsValid = true;
-                reajusteAvulsaItems.forEach((item, index) => {
-                    if (!item.componente || item.quantidade <= 0) {
-                        allItemsValid = false;
-                        showToast(`Item avulso ${index + 1}: Selecione um componente e uma quantidade válida.`, 'error');
-                    }
-                });
-
-                if (!allItemsValid) {
+                // Validação específica para o novo campo
+                if (!componente || quantidade <= 0) {
+                    showToast('Por favor, selecione um componente e uma quantidade válida para o reajuste.', 'error');
                     return;
                 }
 
                 const data = {
                     tipo_operacao: tipoOperacao,
                     descricao: descricao,
-                    itens: reajusteAvulsaItems // Envia os itens avulsos
+                    itens: [{ componente: componente, quantidade: quantidade }] // Agora, 'itens' será um array com um único objeto
                 };
 
                 const result = await postData('/reajuste_estoque', data);
                 if (result) {
                     showToast(result.message, 'success');
                     document.getElementById('formReajusteEstoque').reset();
-                    reajusteAvulsaItems = []; // Limpa a lista após o envio
-                    updateAvulsaItemsDisplay('reajuste');
+                    // Limpar os campos do novo formulário
+                    document.getElementById('reajusteComponente').value = '';
+                    document.getElementById('reajusteQuantidade').value = '1';
+
+                    // Re-popular o dropdown de componentes (se necessário, para resetar)
+                    populateComponentsDropdown('reajusteComponente', ALL_COMPONENTS);
+
                     loadEstoque();
                     loadMovimentacoes();
                     loadDashboardData();
