@@ -668,15 +668,37 @@
                     <p class="text-3xl md:text-4xl font-bold text-red-600" id="low-stock-count">0</p>
                 </div>
                 
-                <!-- Gráfico de Movimentações Mensais (EXISTENTE) -->
+                <!-- Gráfico de Movimentações de Pedidos (Pedidos Pendentes) -->
                 <div class="card mt-6">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Movimentações de Estoque (Últimos 6 Meses)</h3>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Movimentações de Pedidos (Últimos 6 Meses)</h3>
                     <div class="relative h-80 w-full"> <!-- Fixed height for chart container -->
-                        <canvas id="monthlyMovementsChart"></canvas>
+                        <canvas id="orderMovementsChart"></canvas>
                     </div>
                 </div>
 
-                <!-- NOVO: Bloco de Produção por CJA e Tipo de Tampo (com seletores) -->
+                <!-- NOVO: Tabela de Análise de Pedidos CJA -->
+                <div class="card mt-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Análise de Pedidos CJA (Conjuntos Solicitados)</h3>
+                    <div class="table-container">
+                        <table id="table-cja-orders-analysis">
+                            <thead>
+                                <tr>
+                                    <th data-sort-key="modelo_cja">MODELO CJA</th>
+                                    <th data-sort-key="mdf">MDF</th>
+                                    <th data-sort-key="plastico">PLÁSTICO</th>
+                                    <th data-sort-key="masticmol">MASTICMOL</th>
+                                    <th data-sort-key="total">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cja-orders-analysis-table-body">
+                                <!-- Dados serão inseridos aqui pelo JavaScript -->
+                            </tbody>
+                        </table>
+                        <p id="no-cja-orders-analysis-data" class="no-data">Nenhum pedido de CJA encontrado para análise.</p>
+                    </div>
+                </div>
+
+                <!-- Bloco de Produção por CJA e Tipo de Tampo (com seletores) -->
                 <div class="card mt-6">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">Produção de Conjuntos por Modelo e Tampo</h3>
                     <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
@@ -1507,7 +1529,7 @@
         let currentDashboardMovementsData = []; 
 
         // Variáveis para os gráficos
-        let monthlyMovementsChartInstance = null;
+        let orderMovementsChartInstance = null; // Renomeado
         let cjaProductionChartInstance = null;
 
         // Variáveis para os itens de reajuste/saída manual
@@ -1911,31 +1933,61 @@
 
         // --- Funções de Carregamento de Dados ---
 
-        async function fetchData(endpoint) {
-            showLoading();
+        // Função fetchData com logs detalhados
+        async function fetchData(endpoint, method = 'GET', body = null) {
+            console.log(`Iniciando requisição para: ${endpoint}`);
+            const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; // Sua URL base do backend
+            const token = localStorage.getItem('token'); // Ou como você armazena seu token
+
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const config = {
+                method: method,
+                headers: headers,
+            };
+
+            if (body && (method === 'POST' || method === 'PUT')) {
+                config.body = JSON.stringify(body);
+            }
+
             try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentUser.token}`
-                    }
-                });
+                console.log('Configuração da requisição:', config);
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+                console.log('Resposta recebida do backend para', endpoint, ':', response);
+                console.log('Status da resposta para', endpoint, ':', response.status);
+                console.log('Status OK (200-299) para', endpoint, ':', response.ok);
+
                 if (!response.ok) {
-                    if (response.status === 401) { 
-                        showToast('Sessão expirada ou não autenticada. Por favor, faça login novamente.', 'error');
-                        logout(); 
-                        return null;
+                    // Tenta ler o corpo do erro para mais detalhes, se houver
+                    let errorDetails = `Status: ${response.status}`;
+                    try {
+                        const errorJson = await response.json();
+                        errorDetails += ` - JSON: ${JSON.stringify(errorJson)}`;
+                    } catch (jsonError) {
+                        const errorText = await response.text();
+                        errorDetails += ` - Texto: ${errorText}`;
                     }
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    console.error(`Erro HTTP para ${endpoint}!`, errorDetails);
+                    throw new Error(`HTTP error! ${errorDetails}`);
                 }
+
                 const data = await response.json();
-                console.log(`Dados recebidos de ${endpoint}:`, data); 
+                console.log('Dados recebidos para', endpoint, ':', data);
                 return data;
+
             } catch (error) {
-                console.error(`Erro ao buscar dados de ${endpoint}:`, error);
-                showToast(`Erro ao carregar dados: ${error.message}`, 'error');
-                return null;
+                console.error('Erro ao fazer fetch para', endpoint, ':', error);
+                throw error; // Re-lança o erro para que a função chamadora (loadDashboardData) possa pegá-lo
             } finally {
-                hideLoading();
+                // O hideLoading() foi removido daqui e deve ser chamado pela função que chama fetchData
+                // para garantir que o spinner só seja escondido após todas as chamadas assíncronas serem concluídas.
             }
         }
 
@@ -2273,7 +2325,8 @@
 
         async function loadDashboardData() {
             const estoqueData = await fetchData('/estoque');
-            const movimentacoesData = await fetchData('/movimentacoes');
+            const pendingOrdersData = await fetchData('/pedidos_pendentes'); // Fetch pending orders
+            const movimentacoesData = await fetchData('/movimentacoes'); // Still needed for other dashboard metrics
 
             if (estoqueData) {
                 let totalItems = 0;
@@ -2342,37 +2395,39 @@
                 populateProducaoMinima(estoqueData); 
             }
 
+            // Update monthly and weekly movements based on *movimentacoesData* (stock movements)
             if (movimentacoesData) {
                 const today = new Date();
                 const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
                 const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
 
-                // Filter and store monthly/weekly movements
                 const monthlyMovements = movimentacoesData.filter(mov => {
                     const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                    // Filter only "Saída - Pedido" for dashboard movements
-                    return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneMonthAgo;
+                    return movDate && movDate >= oneMonthAgo;
                 });
                 const weeklyMovements = movimentacoesData.filter(mov => {
                     const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                    // Filter only "Saída - Pedido" for dashboard movements
-                    return movDate && mov.tipo === "Saída - Pedido" && movDate >= oneWeekAgo;
+                    return movDate && movDate >= oneWeekAgo;
                 });
 
-                // Update dashboard counts
                 const monthlyMovementsElement = document.getElementById('monthly-movements');
                 if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyMovements.length;
                 const weeklyMovementsElement = document.getElementById('weekly-movements');
                 if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyMovements.length;
 
-                // Store these for the dashboard movements modal
                 currentDashboardMovementsData = {
                     monthly: monthlyMovements,
                     weekly: weeklyMovements
                 };
-
-                renderMonthlyMovementsChart(movimentacoesData); 
             }
+
+            // Render the NEW Order Movements Chart using pendingOrdersData
+            if (pendingOrdersData) {
+                currentPendingOrdersData = pendingOrdersData; // Store for the CJA analysis table
+                renderOrderMovementsChart(pendingOrdersData); // Use pending orders for this chart
+                populateCJAOrdersAnalysisTable(pendingOrdersData); // Populate the new CJA analysis table
+            }
+            hideLoading(); // Chamada para esconder o spinner após todas as fetches do dashboard
         }
 
         // Função para popular a tabela de estoque baixo (agora dentro do modal)
@@ -2844,43 +2899,37 @@
             }
         }
 
-        function renderMonthlyMovementsChart(movimentacoes) {
-            const ctx = document.getElementById('monthlyMovementsChart')?.getContext('2d');
+        // NOVO: Função para renderizar o gráfico de movimentações de pedidos
+        function renderOrderMovementsChart(pendingOrders) {
+            const ctx = document.getElementById('orderMovementsChart')?.getContext('2d');
             if (!ctx) {
-                console.error("Canvas para o gráfico de movimentações mensais não encontrado.");
+                console.error("Canvas para o gráfico de movimentações de pedidos não encontrado.");
                 return;
             }
 
-            const monthlyData = {};
+            const monthlyOrderData = {};
             const today = new Date();
             for (let i = 0; i < 6; i++) { 
                 const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
                 const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
-                monthlyData[monthYear] = { entradas: 0, saidas: 0 };
+                monthlyOrderData[monthYear] = 0; // Quantidade total de conjuntos CJA solicitados
             }
 
-            movimentacoes.forEach(mov => {
-                const movDate = new Date(mov.timestamp);
-                const monthYear = movDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+            pendingOrders.forEach(order => {
+                const orderDate = order.created_at ? new Date(order.created_at) : null;
+                const monthYear = orderDate ? orderDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }) : null;
 
-                if (monthlyData[monthYear]) {
-                    if (mov.tipo === "Entrada - Manual" && mov.itens) {
-                        mov.itens.forEach(item => {
-                            if (item.quantidade > 0) { 
-                                monthlyData[monthYear].entradas += item.quantidade;
-                            }
-                        });
-                    } else if (mov.tipo === "Saída - Pedido" && mov.itens) {
-                        mov.itens.forEach(item => {
-                            monthlyData[monthYear].saidas += item.quantidade;
-                        });
-                    } else if (mov.tipo === "Produção - Conjunto Pronto") {
-                        monthlyData[monthYear].entradas += mov.quantidade;
-                    }
+                if (monthYear && monthlyOrderData.hasOwnProperty(monthYear)) {
+                    order.itens.forEach(item => {
+                        // Considera apenas itens que são conjuntos CJA (têm modelo_cja e tampo_tipo)
+                        if (item.modelo_cja && item.tampo_tipo && item.quantidade > 0) {
+                            monthlyOrderData[monthYear] += item.quantidade;
+                        }
+                    });
                 }
             });
 
-            const labels = Object.keys(monthlyData).sort((a, b) => {
+            const labels = Object.keys(monthlyOrderData).sort((a, b) => {
                 const [monthA, yearA] = a.split('/');
                 const [monthB, yearB] = b.split('/');
                 const dateA = new Date(`01 ${monthA} 20${yearA}`);
@@ -2888,33 +2937,23 @@
                 return dateA - dateB;
             });
 
-            const entradasData = labels.map(label => monthlyData[label].entradas);
-            const saidasData = labels.map(label => monthlyData[label].saidas);
+            const quantities = labels.map(label => monthlyOrderData[label]);
 
-            if (monthlyMovementsChartInstance) {
-                monthlyMovementsChartInstance.destroy(); 
+            if (orderMovementsChartInstance) {
+                orderMovementsChartInstance.destroy(); 
             }
 
-            monthlyMovementsChartInstance = new Chart(ctx, {
-                type: 'line',
+            orderMovementsChartInstance = new Chart(ctx, {
+                type: 'bar', // Gráfico de barras para quantidades
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Entradas',
-                            data: entradasData,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.3, 
-                            fill: true 
-                        },
-                        {
-                            label: 'Saídas',
-                            data: saidasData,
-                            borderColor: 'rgb(255, 99, 132)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            tension: 0.3, 
-                            fill: true 
+                            label: 'Conjuntos CJA Solicitados',
+                            data: quantities,
+                            backgroundColor: 'rgba(79, 70, 229, 0.7)', // Cor primária do Tailwind
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
                         }
                     ]
                 },
@@ -2924,7 +2963,10 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Movimentações de Estoque por Mês'
+                            text: 'Total de Conjuntos CJA Solicitados por Mês'
+                        },
+                        legend: {
+                            display: false // Oculta a legenda se houver apenas um dataset
                         }
                     },
                     scales: {
@@ -2932,7 +2974,10 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Quantidade de Itens'
+                                text: 'Quantidade de Conjuntos'
+                            },
+                            ticks: {
+                                precision: 0 // Garante que as quantidades sejam inteiras
                             }
                         },
                         x: {
@@ -3072,6 +3117,67 @@
             });
         }
 
+        // NOVO: Função para popular a tabela de análise de pedidos CJA
+        function populateCJAOrdersAnalysisTable(pendingOrdersData) {
+            const tableBody = document.getElementById('cja-orders-analysis-table-body');
+            const noDataElement = document.getElementById('no-cja-orders-analysis-data');
+            tableBody.innerHTML = '';
+
+            const cjaAnalysis = {};
+
+            CJA_MODELS.forEach(model => {
+                cjaAnalysis[model] = {
+                    MDF: 0,
+                    PLASTICO: 0,
+                    MASTICMOL: 0,
+                    TOTAL: 0
+                };
+            });
+
+            pendingOrdersData.forEach(order => {
+                order.itens.forEach(item => {
+                    if (item.modelo_cja && item.tampo_tipo && CJA_MODELS.includes(item.modelo_cja)) {
+                        const model = item.modelo_cja;
+                        const tampo = item.tampo_tipo;
+                        const quantity = item.quantidade || 0;
+
+                        if (cjaAnalysis[model]) {
+                            if (cjaAnalysis[model][tampo]) {
+                                cjaAnalysis[model][tampo] += quantity;
+                            } else {
+                                // If tampo type is not explicitly MDF, PLASTICO, MASTICMOL, it's ignored for this specific table
+                                // Or, if MASTICMOL tampo is present, we can add it to the MASTICMOL column.
+                                // For now, let's assume TAMPO_TYPES covers all relevant tampo types for CJA sets.
+                                cjaAnalysis[model][tampo] = quantity; // Initialize if not present
+                            }
+                            cjaAnalysis[model].TOTAL += quantity;
+                        }
+                    }
+                });
+            });
+
+            let hasData = false;
+            CJA_MODELS.forEach(model => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-left">${model}</td>
+                    <td class="py-3 px-6 text-left">${cjaAnalysis[model].MDF || 0}</td>
+                    <td class="py-3 px-6 text-left">${cjaAnalysis[model].PLASTICO || 0}</td>
+                    <td class="py-3 px-6 text-left">${cjaAnalysis[model].MASTICMOL || 0}</td>
+                    <td class="py-3 px-6 text-left font-semibold">${cjaAnalysis[model].TOTAL || 0}</td>
+                `;
+                tableBody.appendChild(row);
+                if (cjaAnalysis[model].TOTAL > 0) {
+                    hasData = true;
+                }
+            });
+
+            if (noDataElement) {
+                noDataElement.style.display = hasData ? 'none' : 'block';
+            }
+        }
+
 
         async function loadUsers() { 
             const usersData = await fetchData('/users');
@@ -3200,7 +3306,7 @@
 
         // Funções para Pedidos Pendentes (APENAS VISUALIZAÇÃO E ATUALIZAÇÃO DE STATUS)
         async function loadPendingOrders() {
-            const pendingOrdersData = await fetchData('/pending_orders');
+            const pendingOrdersData = await fetchData('/pedidos_pendentes');
             if (pendingOrdersData) {
                 currentPendingOrdersData = pendingOrdersData;
                 populatePendingOrdersTable(pendingOrdersData);
