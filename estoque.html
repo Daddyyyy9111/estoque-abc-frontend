@@ -857,6 +857,10 @@
                                 <label for="reajusteModeloCJA" class="block text-gray-700 text-sm font-bold mb-1">Modelo CJA:</label>
                                 <select id="reajusteModeloCJA" name="modelo_cja" class="select-field" disabled required>
                                     <option value="">Selecione o Modelo CJA</option>
+                                    <option value="CJA-06">CJA-06</option>
+                                    <option value="CJA-05">CJA-05</option>
+                                    <option value="CJA-04">CJA-04</option>
+                                    <option value="CJA-03">CJA-03</option>
                                 </select>
                                 <p id="reajusteModeloCJA-validation" class="validation-message">Campo obrigatório.</p>
                             </div>
@@ -2252,7 +2256,8 @@
 
                 if (mov.tipo === "Saída - Pedido") { 
                     hasSaidas = true;
-                    const conjuntosPedidos = mov.itens.map(item => {
+                    // Certifique-se de que mov.itens é um array antes de chamar .map()
+                    const conjuntosPedidos = Array.isArray(mov.itens) ? mov.itens.map(item => {
                         let itemStr = `${item.quantidade}x `;
                         // Ajuste para exibir corretamente o nome do item
                         if (item.modelo_cja && item.tampo_tipo) {
@@ -2263,14 +2268,14 @@
                             itemStr += 'N/A';
                         }
                         return itemStr;
-                    }).join(', ');
+                    }).join(', ') : 'N/A';
 
                     row.innerHTML = `
                         <td class="py-3 px-6 text-left">${timestampFormatted}</td>
                         <td class="py-3 px-6 text-left">${mov.os_number}</td>
                         <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
-                            <button data-os-number="${mov.os_number}" data-itens="${escape(JSON.stringify(mov.itens))}" data-cidade-destino="${mov.cidade_destino}" data-data-emissao="${mov.data_emissao}" data-prazo-entrega="${mov.prazo_entrega}" class="text-indigo-500 hover:underline show-order-details-btn">
+                            <button data-os-number="${mov.os_number}" data-itens="${escape(JSON.stringify(mov.itens || []))}" data-cidade-destino="${mov.cidade_destino}" data-data-emissao="${mov.data_emissao}" data-prazo-entrega="${mov.prazo_entrega}" class="text-indigo-500 hover:underline show-order-details-btn">
                                 ${conjuntosPedidos}
                             </button>
                         </td>
@@ -2279,11 +2284,11 @@
                     saidasTableBody.getElementsByTagName('tbody')[0].appendChild(row);
                 } else if (mov.tipo === "Entrada - Manual") { 
                     hasEntradas = true;
-                    const itensResumo = mov.itens.map(item => {
+                    const itensResumo = Array.isArray(mov.itens) ? mov.itens.map(item => {
                         let itemStr = `${item.quantidade}x `;
                         itemStr += item.componente || 'N/A';
                         return itemStr;
-                    }).join(', ');
+                    }).join(', ') : 'N/A';
 
                     row.innerHTML = `
                         <td class="py-3 px-6 text-left">${timestampFormatted}</td>
@@ -2326,110 +2331,118 @@
         }
 
         async function loadDashboardData() {
-            const estoqueData = await fetchData('/estoque');
-            const pendingOrdersData = await fetchData('/pedidos_pendentes'); // Fetch pending orders
-            const movimentacoesData = await fetchData('/movimentacoes'); // Still needed for other dashboard metrics
+            showLoading(); // Inicia o spinner de carregamento
 
-            if (estoqueData) {
-                let totalItems = 0;
-                const stockMap = {};
-                estoqueData.forEach(item => {
-                    stockMap[item.modelo] = item.quantidade;
-                });
+            try {
+                const estoqueData = await fetchData('/estoque');
+                const pendingOrdersData = await fetchData('/pedidos_pendentes'); // Fetch pending orders
+                const movimentacoesData = await fetchData('/movimentacoes'); // Still needed for other dashboard metrics
 
-                for (const key in stockMap) {
-                    totalItems += stockMap[key];
-                }
-                const totalItemsElement = document.getElementById('total-items'); 
-                if (totalItemsElement) {
-                    totalItemsElement.textContent = totalItems;
-                } else {
-                    console.error('Elemento #total-items não encontrado no dashboard.');
-                }
+                if (estoqueData) {
+                    let totalItems = 0;
+                    const stockMap = {};
+                    estoqueData.forEach(item => {
+                        stockMap[item.modelo] = item.quantidade;
+                    });
 
-                // Populando currentLowStockData para o modal
-                let lowStockItemCount = 0;
-                const LOW_STOCK_THRESHOLD = 300;
-                currentLowStockData = []; 
-
-                // Usar ALL_COMPONENTS para verificar estoque baixo
-                ALL_COMPONENTS.forEach(componentName => {
-                    const quantity = stockMap[componentName] || 0;
-                    if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) { 
-                        lowStockItemCount++;
-                        currentLowStockData.push({ componente: componentName, quantidade: quantity });
+                    for (const key in stockMap) {
+                        totalItems += stockMap[key];
                     }
-                });
-                
-                // Adicionar conjuntos prontos à verificação de estoque baixo
-                const ALL_CONJUNTOS_PRONTOS = [];
-                CJA_TYPES.forEach(cjaType => {
-                    CJA_MODELS.forEach(cjaModel => {
-                        TAMPO_TYPES.forEach(tampoType => {
-                            ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-LOCAL-${cjaType}-${cjaModel}-${tampoType}`);
-                            ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-DISTRITO-${cjaType}-${cjaModel}-${tampoType}`);
+                    const totalItemsElement = document.getElementById('total-items'); 
+                    if (totalItemsElement) {
+                        totalItemsElement.textContent = totalItems;
+                    } else {
+                        console.error('Elemento #total-items não encontrado no dashboard.');
+                    }
+
+                    // Populando currentLowStockData para o modal
+                    let lowStockItemCount = 0;
+                    const LOW_STOCK_THRESHOLD = 300;
+                    currentLowStockData = []; 
+
+                    // Usar ALL_COMPONENTS para verificar estoque baixo
+                    ALL_COMPONENTS.forEach(componentName => {
+                        const quantity = stockMap[componentName] || 0;
+                        if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) { 
+                            lowStockItemCount++;
+                            currentLowStockData.push({ componente: componentName, quantidade: quantity });
+                        }
+                    });
+                    
+                    // Adicionar conjuntos prontos à verificação de estoque baixo
+                    const ALL_CONJUNTOS_PRONTOS = [];
+                    CJA_TYPES.forEach(cjaType => {
+                        CJA_MODELS.forEach(cjaModel => {
+                            TAMPO_TYPES.forEach(tampoType => {
+                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-LOCAL-${cjaType}-${cjaModel}-${tampoType}`);
+                                ALL_CONJUNTOS_PRONTOS.push(`CONJUNTO-PRONTO-DISTRITO-${cjaType}-${cjaModel}-${tampoType}`);
+                            });
                         });
                     });
-                });
 
-                ALL_CONJUNTOS_PRONTOS.forEach(conjuntoName => {
-                    const quantity = stockMap[conjuntoName] || 0;
-                    if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) {
-                        lowStockItemCount++;
-                        currentLowStockData.push({ componente: conjuntoName, quantidade: quantity });
+                    ALL_CONJUNTOS_PRONTOS.forEach(conjuntoName => {
+                        const quantity = stockMap[conjuntoName] || 0;
+                        if (quantity <= LOW_STOCK_THRESHOLD && quantity > 0) {
+                            lowStockItemCount++;
+                            currentLowStockData.push({ componente: conjuntoName, quantidade: quantity });
+                        }
+                    });
+
+                    const lowStockCountElement = document.getElementById('low-stock-count');
+                    const lowStockCard = document.getElementById('card-low-stock');
+
+                    if (lowStockCountElement) {
+                        lowStockCountElement.textContent = lowStockItemCount;
                     }
-                });
-
-                const lowStockCountElement = document.getElementById('low-stock-count');
-                const lowStockCard = document.getElementById('card-low-stock');
-
-                if (lowStockCountElement) {
-                    lowStockCountElement.textContent = lowStockItemCount;
-                }
-                if (lowStockCard) {
-                    if (lowStockItemCount > 0) {
-                        lowStockCard.classList.add('low-stock-alert');
-                    } else {
-                        lowStockCard.classList.remove('low-stock-alert');
+                    if (lowStockCard) {
+                        if (lowStockItemCount > 0) {
+                            lowStockCard.classList.add('low-stock-alert');
+                        } else {
+                            lowStockCard.classList.remove('low-stock-alert');
+                        }
                     }
+
+                    populateProducaoMinima(estoqueData); 
                 }
 
-                populateProducaoMinima(estoqueData); 
+                // Update monthly and weekly movements based on *movimentacoesData* (stock movements)
+                if (movimentacoesData) {
+                    const today = new Date();
+                    const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                    const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+
+                    const monthlyMovements = movimentacoesData.filter(mov => {
+                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                        return movDate && movDate >= oneMonthAgo;
+                    });
+                    const weeklyMovements = movimentacoesData.filter(mov => {
+                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
+                        return movDate && movDate >= oneWeekAgo;
+                    });
+
+                    const monthlyMovementsElement = document.getElementById('monthly-movements');
+                    if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyMovements.length;
+                    const weeklyMovementsElement = document.getElementById('weekly-movements');
+                    if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyMovements.length;
+
+                    currentDashboardMovementsData = {
+                        monthly: monthlyMovements,
+                        weekly: weeklyMovements
+                    };
+                }
+
+                // Render the NEW Order Movements Chart using pendingOrdersData
+                if (pendingOrdersData) {
+                    currentPendingOrdersData = pendingOrdersData; // Store for the CJA analysis table
+                    renderOrderMovementsChart(pendingOrdersData); // Use pending orders for this chart
+                    populateCJAOrdersAnalysisTable(pendingOrdersData); // Populate the new CJA analysis table
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do dashboard:', error);
+                showToast(`Erro ao carregar dashboard: ${error.message}`, 'error');
+            } finally {
+                hideLoading(); // Chamada para esconder o spinner após todas as fetches do dashboard
             }
-
-            // Update monthly and weekly movements based on *movimentacoesData* (stock movements)
-            if (movimentacoesData) {
-                const today = new Date();
-                const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-                const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-
-                const monthlyMovements = movimentacoesData.filter(mov => {
-                    const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                    return movDate && movDate >= oneMonthAgo;
-                });
-                const weeklyMovements = movimentacoesData.filter(mov => {
-                    const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                    return movDate && movDate >= oneWeekAgo;
-                });
-
-                const monthlyMovementsElement = document.getElementById('monthly-movements');
-                if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyMovements.length;
-                const weeklyMovementsElement = document.getElementById('weekly-movements');
-                if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyMovements.length;
-
-                currentDashboardMovementsData = {
-                    monthly: monthlyMovements,
-                    weekly: weeklyMovements
-                };
-            }
-
-            // Render the NEW Order Movements Chart using pendingOrdersData
-            if (pendingOrdersData) {
-                currentPendingOrdersData = pendingOrdersData; // Store for the CJA analysis table
-                renderOrderMovementsChart(pendingOrdersData); // Use pending orders for this chart
-                populateCJAOrdersAnalysisTable(pendingOrdersData); // Populate the new CJA analysis table
-            }
-            hideLoading(); // Chamada para esconder o spinner após todas as fetches do dashboard
         }
 
         // Função para popular a tabela de estoque baixo (agora dentro do modal)
@@ -2524,7 +2537,7 @@
                     itemDiv.innerHTML = `
                         <div class="movement-block-header">
                             <div>
-                                <p>OS: ${mov.os_number}</p>
+                                <p>OS: ${mov.os_number || 'N/A'}</p>
                                 <p>Município: ${mov.cidade_destino || 'N/A'}</p>
                                 <p>Data: ${dataEmissaoFormatada}</p>
                             </div>
@@ -2533,8 +2546,8 @@
                         <div class="movement-block-details">
                             <h4 class="text-md font-semibold text-gray-700 mb-2">Itens do Pedido:</h4>
                             <ul>
-                                ${mov.itens.map(item => {
-                                    let itemDisplay = `${item.quantidade}x `;
+                                ${Array.isArray(mov.itens) ? mov.itens.map(item => { // Adicionado verificação aqui
+                                    let itemDisplay = `${item.quantidade || 'N/A'}x `;
                                     if (item.modelo_cja && item.tampo_tipo) {
                                         itemDisplay += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                                     } else if (item.componente) {
@@ -2543,7 +2556,7 @@
                                         itemDisplay += 'N/A';
                                     }
                                     return `<li><span>${itemDisplay}</span></li>`;
-                                }).join('')}
+                                }).join('') : '<li>Nenhum item disponível.</li>'}
                             </ul>
                         </div>
                     `;
@@ -2922,12 +2935,15 @@
                 const monthYear = orderDate ? orderDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }) : null;
 
                 if (monthYear && monthlyOrderData.hasOwnProperty(monthYear)) {
-                    order.itens.forEach(item => {
-                        // Considera apenas itens que são conjuntos CJA (têm modelo_cja e tampo_tipo)
-                        if (item.modelo_cja && item.tampo_tipo && item.quantidade > 0) {
-                            monthlyOrderData[monthYear] += item.quantidade;
-                        }
-                    });
+                    // Adicionado verificação para garantir que order.itens é um array
+                    if (Array.isArray(order.itens)) { 
+                        order.itens.forEach(item => {
+                            // Considera apenas itens que são conjuntos CJA (têm modelo_cja e tampo_tipo)
+                            if (item.modelo_cja && item.tampo_tipo && item.quantidade > 0) {
+                                monthlyOrderData[monthYear] += item.quantidade;
+                            }
+                        });
+                    }
                 }
             });
 
@@ -3137,25 +3153,28 @@
             });
 
             pendingOrdersData.forEach(order => {
-                order.itens.forEach(item => {
-                    if (item.modelo_cja && item.tampo_tipo && CJA_MODELS.includes(item.modelo_cja)) {
-                        const model = item.modelo_cja;
-                        const tampo = item.tampo_tipo;
-                        const quantity = item.quantidade || 0;
+                // Adicionado verificação para garantir que order.itens é um array
+                if (Array.isArray(order.itens)) { 
+                    order.itens.forEach(item => {
+                        if (item.modelo_cja && item.tampo_tipo && CJA_MODELS.includes(item.modelo_cja)) {
+                            const model = item.modelo_cja;
+                            const tampo = item.tampo_tipo;
+                            const quantity = item.quantidade || 0;
 
-                        if (cjaAnalysis[model]) {
-                            if (cjaAnalysis[model][tampo]) {
-                                cjaAnalysis[model][tampo] += quantity;
-                            } else {
-                                // If tampo type is not explicitly MDF, PLASTICO, MASTICMOL, it's ignored for this specific table
-                                // Or, if MASTICMOL tampo is present, we can add it to the MASTICMOL column.
-                                // For now, let's assume TAMPO_TYPES covers all relevant tampo types for CJA sets.
-                                cjaAnalysis[model][tampo] = quantity; // Initialize if not present
+                            if (cjaAnalysis[model]) {
+                                if (cjaAnalysis[model][tampo]) {
+                                    cjaAnalysis[model][tampo] += quantity;
+                                } else {
+                                    // If tampo type is not explicitly MDF, PLASTICO, MASTICMOL, it's ignored for this specific table
+                                    // Or, if MASTICMOL tampo is present, we can add it to the MASTICMOL column.
+                                    // For now, let's assume TAMPO_TYPES covers all relevant tampo types for CJA sets.
+                                    cjaAnalysis[model][tampo] = quantity; // Initialize if not present
+                                }
+                                cjaAnalysis[model].TOTAL += quantity;
                             }
-                            cjaAnalysis[model].TOTAL += quantity;
                         }
-                    }
-                });
+                    });
+                }
             });
 
             let hasData = false;
@@ -3257,7 +3276,7 @@
                 let tipoAcao = mov.tipo;
 
                 if (mov.tipo === "Saída - Pedido") {
-                    detalhes = `Pedido/OS: ${mov.os_number}, Destino: ${mov.cidade_destino}, Itens: ${mov.itens.map(item => {
+                    detalhes = `Pedido/OS: ${mov.os_number}, Destino: ${mov.cidade_destino}, Itens: ${Array.isArray(mov.itens) ? mov.itens.map(item => { // Adicionado verificação aqui
                         if (item.modelo_cja && item.tampo_tipo) {
                             return `${item.quantidade}x ${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                         } else if (item.componente) {
@@ -3265,9 +3284,9 @@
                         } else {
                             return 'N/A';
                         }
-                    }).join(', ')}`;
+                    }).join(', ') : 'N/A'}`;
                 } else if (mov.tipo === "Entrada - Manual") {
-                    detalhes = `Tipo: ${mov.tipo_entrada}, Descrição: ${mov.descricao}, Itens: ${mov.itens.map(item => `${item.quantidade}x ${item.componente}`).join(', ')}`;
+                    detalhes = `Tipo: ${mov.tipo_entrada}, Descrição: ${mov.descricao}, Itens: ${Array.isArray(mov.itens) ? mov.itens.map(item => `${item.quantidade}x ${item.componente}`).join(', ') : 'N/A'}`; // Adicionado verificação aqui
                 } else if (mov.tipo === "Produção - Conjunto Pronto") {
                     detalhes = `Produção: ${mov.quantidade}x ${mov.tipo_cja}-${mov.modelo_cja} (Tampo: ${mov.tampo_tipo}), Destino: ${mov.destino_estoque}`;
                 }
@@ -3328,7 +3347,7 @@
                     const createdDate = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : 'N/A';
                     const updatedDate = order.updated_at ? new Date(order.updated_at).toLocaleString('pt-BR') : 'N/A';
                     
-                    const itensResumo = order.itens.map(item => {
+                    const itensResumo = Array.isArray(order.itens) ? order.itens.map(item => { // Adicionado verificação aqui
                         if (item.modelo_cja && item.tampo_tipo) {
                             return `${item.quantidade}x ${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                         } else if (item.componente) {
@@ -3336,7 +3355,7 @@
                         } else {
                             return 'N/A';
                         }
-                    }).join(', ');
+                    }).join(', ') : 'N/A';
 
                     let statusColorClass = '';
                     if (order.status === 'Pendente') {
