@@ -20,52 +20,37 @@
         }
         .sidebar {
             width: 250px;
-            transition: width 0.3s ease;
-            position: fixed; /* Fixa a sidebar */
-            height: 100%; /* Ocupa toda a altura */
-            overflow-y: auto; /* Permite scroll se o conteúdo for muito grande */
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 50; /* Garante que a sidebar fique acima do conteúdo */
             background-color: #3730a3; /* Darker indigo for sidebar */
             color: white;
-            z-index: 999;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .sidebar.collapsed {
-            width: 64px; /* w-16 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%); /* Esconde a sidebar por padrão em mobile */
+            }
+            .sidebar.open {
+                transform: translateX(0); /* Mostra a sidebar quando aberta */
+            }
+            .main-content-area { /* Alterado para main-content-area */
+                margin-left: 0 !important; /* Remove margin-left em mobile */
+            }
+            .overlay {
+                display: none; /* Esconde o overlay por padrão */
+            }
+            .overlay.active {
+                display: block; /* Mostra o overlay quando a sidebar está aberta */
+            }
         }
-        .sidebar-content {
-            opacity: 1;
-            transition: opacity 0.3s ease;
-            white-space: nowrap; /* Impede quebras de linha */
-            overflow: hidden; /* Esconde o texto quando recolhido */
-            flex-grow: 1; /* Permite que o texto ocupe o espaço restante */
-        }
-        .sidebar.collapsed .sidebar-content {
-            opacity: 0;
-            width: 0;
-        }
-        .sidebar ul li a {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-radius: 0.65rem;
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-        }
-        .sidebar ul li a:hover {
-            background-color: #4338ca; /* Slightly lighter indigo on hover */
-            color: white;
-        }
-        .sidebar ul li a i {
-            flex-shrink: 0; /* Impede que o ícone encolha */
-        }
-
-        /* Main Content Area */
-        .main-content-area {
-            margin-left: 250px; /* Adjust for sidebar width */
-            padding: 2rem;
+        .main-content-area { /* Alterado para main-content-area */
+            margin-left: 250px; /* Espaço para a sidebar */
             transition: margin-left 0.3s ease;
-        }
-        .main-content-area.expanded {
-            margin-left: 64px; /* When sidebar is collapsed */
+            padding: 2rem; /* Adicionado padding padrão */
         }
 
         /* Card Styles */
@@ -271,20 +256,19 @@
 
         /* Sidebar Toggle for Mobile */
         .sidebar-toggle {
-            display: block;
+            display: none; /* Hidden by default, shown by media query */
             background-color: #4f46e5;
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem; /* Adjusted padding */
+            border-radius: 0.65rem; /* Adjusted border-radius */
             font-weight: 600;
             cursor: pointer;
             text-align: center;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: fixed; /* Fixa o botão no topo */
             top: 1rem;
             left: 1rem;
             z-index: 1000; /* Acima de tudo */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         /* Responsive Adjustments */
@@ -296,18 +280,18 @@
             .main-content-area {
                 margin-left: 250px; /* Compensate for sidebar width */
             }
-            .main-content-area.expanded {
-                margin-left: 64px; /* When sidebar is collapsed */
-            }
             .flex-container { flex-direction: row; }
             .modal-content { padding: 2rem; }
         }
 
         /* Mobile Specific Adjustments */
         @media (max-width: 767px) {
+            .sidebar-toggle { display: block; } /* Show on mobile */
             .sidebar {
                 transform: translateX(-100%); /* Hidden by default on mobile */
                 width: 250px; /* Full width when active */
+                position: fixed; /* Ensure it stays fixed */
+                height: 100%; /* Full height */
             }
             .sidebar.active {
                 transform: translateX(0); /* Slide in */
@@ -1158,81 +1142,33 @@
 
             <!-- Movimentações Section -->
             <section id="movimentacoes-view" class="tab-content">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Histórico de Movimentações</h2>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Histórico de Pedidos Processados</h2>
                 <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
-                    <div class="flex border-b border-gray-200 mb-4">
-                        <button id="tab-saidas" class="tab-button active">Saídas (Pedidos/OS)</button>
-                        <button id="tab-entradas" class="tab-button">Entradas (Compras/Ajustes)</button>
-                        <button id="tab-producao" class="tab-button">Produção (Conjuntos Prontos)</button>
-                    </div>
-
                     <div class="mb-4">
-                        <label for="search-movimentacoes" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar Movimentação:</label>
-                        <input type="text" id="search-movimentacoes" class="input-field" placeholder="Digite para pesquisar por OS, cidade, etc.">
+                        <label for="search-processed-orders" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar Pedido Processado:</label>
+                        <input type="text" id="search-processed-orders" class="input-field" placeholder="Pesquisar por OS, cidade, etc.">
                     </div>
 
-                    <!-- Saídas (Pedidos/OS) Table -->
-                    <div id="saidas-content" class="tab-content active">
+                    <!-- Processed Orders Table -->
+                    <div id="processed-orders-content" class="tab-content active">
                         <div class="table-container">
-                            <table id="table-saidas">
+                            <table id="table-processed-orders">
                                 <thead>
                                     <tr>
-                                        <th data-sort-key="timestamp">DATA/HORA</th>
-                                        <th data-sort-key="os_number">PEDIDO/OS</th>
-                                        <th data-sort-key="cidade_destino">ORIGEM</th>
-                                        <th data-sort-key="modelos_resumo">MODELOS & TAMPOS RESUMO</th>
-                                        <th data-sort-key="registrado_por">REGISTRADO POR</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dados serão inseridos aqui pelo JavaScript -->
-                                </tbody>
-                            </table>
-                            <p id="no-saidas-data" class="no-data">Nenhuma saída registrada.</p>
-                        </div>
-                    </div>
-
-                    <!-- Entradas (Compras/Ajustes) Table -->
-                    <div id="entradas-content" class="tab-content">
-                        <div class="table-container">
-                            <table id="table-entradas">
-                                <thead>
-                                    <tr>
-                                        <th data-sort-key="timestamp">DATA/HORA</th>
-                                        <th data-sort-key="tipo_entrada">TIPO</th>
-                                        <th data-sort-key="descricao">DESCRIÇÃO</th>
+                                        <th data-sort-key="os_number">OS</th>
+                                        <th data-sort-key="cidade_destino">CIDADE</th>
+                                        <th data-sort-key="data_emissao">DATA EMISSÃO</th>
+                                        <th data-sort-key="prazo_entrega">PRAZO ENTREGA</th>
                                         <th data-sort-key="itens_resumo">ITENS</th>
-                                        <th data-sort-key="registrado_por">REGISTRADO POR</th>
+                                        <th data-sort-key="processed_by">PROCESSADO POR</th>
+                                        <th data-sort-key="processed_at">DATA PROCESSAMENTO</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="processed-orders-table-body">
                                     <!-- Dados serão inseridos aqui pelo JavaScript -->
                                 </tbody>
                             </table>
-                            <p id="no-entradas-data" class="no-data">Nenhuma entrada registrada.</p>
-                        </div>
-                    </div>
-
-                    <!-- Produção (Conjuntos Prontos) Table -->
-                    <div id="producao-content" class="tab-content">
-                        <div class="table-container">
-                            <table id="table-producao">
-                                <thead>
-                                    <tr>
-                                        <th data-sort-key="timestamp">DATA/HORA</th>
-                                        <th data-sort-key="tipo_cja">TIPO CJA</th>
-                                        <th data-sort-key="modelo_cja">MODELO CJA</th>
-                                    <th data-sort-key="tampo_tipo">TAMPO</th>
-                                        <th data-sort-key="quantidade">QUANTIDADE</th>
-                                        <th data-sort-key="destino_estoque">DESTINO</th>
-                                        <th data-sort-key="registrado_por">REGISTRADO POR</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dados serão inseridos aqui pelo JavaScript -->
-                                </tbody>
-                            </table>
-                            <p id="no-producao-data" class="no-data">Nenhuma produção registrada.</p>
+                            <p id="no-processed-orders-data" class="no-data">Nenhum pedido processado encontrado.</p>
                         </div>
                     </div>
                 </div>
@@ -1468,10 +1404,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
         // URL do seu backend no Render.com
         // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO SEU SERVIÇO DE BACKEND NO RENDER.COM
-        const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; // <--- VERIFIQUE E ATUALIZE ESTA URL!
+        const API_BASE_URL = 'COLOQUE_AQUI_A_URL_DO_SEU_BACKEND_NO_RENDER'; // <--- ATUALIZE ESTA URL!
 
         // Firebase configuration (Hardcoded for GitHub Pages deployment)
         const firebaseConfig = {
@@ -1487,6 +1424,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app); // Initialize Firestore
 
         // Variáveis globais para informações do usuário logado
         let currentUser = {
@@ -1529,6 +1467,7 @@
         let currentProducaoMinimaData = [];
         let currentAuditLogData = [];
         let currentPendingOrdersData = [];
+        let currentProcessedOrdersData = []; // NOVO: Para pedidos processados
         // Variável para os dados de movimentações do dashboard (mês/semana)
         let currentDashboardMovementsData = []; 
 
@@ -1537,7 +1476,6 @@
         let cjaProductionChartInstance = null;
 
         // Variáveis para os itens de reajuste/saída manual
-        // reajusteAvulsaItems não é mais necessário para o reajuste de componentes
         let saidaConjuntoItems = []; // Para conjuntos prontos na saída manual
         let saidaAvulsaItems = []; // Para itens avulsos na saída manual
 
@@ -1665,11 +1603,13 @@
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('main-content-wrapper'); // Usar main-content-wrapper
             if (sidebar && mainContent) {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                // For mobile, also toggle 'active' class
+                // Toggle 'active' class for mobile sidebar
                 if (window.innerWidth < 768) {
-                    sidebar.classList.toggle('active'); // Use active for mobile sidebar
+                    sidebar.classList.toggle('active'); 
+                    document.getElementById('sidebar-overlay').classList.toggle('active'); // Toggle overlay
+                } else { // Desktop behavior
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
                 }
             } else {
                 console.error('Elemento #sidebar ou #main-content-wrapper não encontrado.');
@@ -1692,7 +1632,7 @@
                     'estoque-componentes-view': 'Estoque de Componentes',
                     'estoque-conjuntos-view': 'Estoque Conjuntos Prontos ABC',
                     'estoque-distrito-view': 'Estoque Distrito',
-                    'movimentacoes-view': 'Movimentações',
+                    'movimentacoes-view': 'Histórico de Pedidos Processados', // Updated title
                     'pedidos-pendentes-view': 'Pedidos Pendentes',
                     'log-auditoria-view': 'Log de Auditoria',
                     'gerenciamento-usuarios-view': 'Gerenciamento de Usuários'
@@ -1705,14 +1645,10 @@
                 }
                 
                 // Chamadas de fetch específicas para a view
-                if (sectionId === 'estoque-componentes-view') {
-                    loadEstoque();
-                } else if (sectionId === 'estoque-conjuntos-view') {
-                    loadEstoque(); // Reutiliza loadEstoque para popular as tabelas de conjuntos
-                } else if (sectionId === 'estoque-distrito-view') {
-                    loadEstoque(); // Reutiliza loadEstoque para popular as tabelas de distrito
+                if (sectionId === 'estoque-componentes-view' || sectionId === 'estoque-conjuntos-view' || sectionId === 'estoque-distrito-view') {
+                    loadEstoque(); // Reutiliza loadEstoque para popular as tabelas de estoque
                 } else if (sectionId === 'movimentacoes-view') {
-                    loadMovimentacoes();
+                    loadProcessedOrders(); // NOVO: Carrega pedidos processados
                 } else if (sectionId === 'dashboard-view') {
                     loadDashboardData();
                 } else if (sectionId === 'gerenciamento-usuarios-view') {
@@ -1724,6 +1660,14 @@
                 }
             } else {
                 console.error(`Elemento de seção com ID ${sectionId} não encontrado.`);
+            }
+
+            // Close sidebar on mobile after navigating
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
             }
         }
 
@@ -1748,26 +1692,8 @@
             }
         }
 
-        // Função showMovementType (para tabs de Movimentações)
-        function showMovementType(type, clickedButtonElement) { 
-            document.querySelectorAll('#movimentacoes-view .tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            if (clickedButtonElement) {
-                clickedButtonElement.classList.add('active');
-            }
-
-            const targetContent = document.getElementById(`${type}-content`);
-            document.querySelectorAll('#movimentacoes-view .tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            if (targetContent) {
-                targetContent.classList.add('active');
-            } else {
-                console.error(`Elemento de conteúdo alvo com ID ${type}-content não encontrado.`);
-            }
-            filterTable('search-movimentacoes', currentMovimentacoesData, populateMovimentacoesTable, true);
-        }
+        // Função showMovementType (para tabs de Movimentações) - REMOVIDA pois "Movimentações" agora exibe apenas pedidos processados
+        // function showMovementType(type, clickedButtonElement) { ... }
 
         function toggleVisibility(elementId) { 
             const element = document.getElementById(elementId);
@@ -1847,26 +1773,35 @@
         }
 
         // --- Funções de Pesquisa e Ordenação ---
-        function filterTable(searchInputId, dataArray, populateFunction, isMovementTable = false, isAuditLogTable = false, isPendingOrderTable = false, isDashboardMovementList = false, isLowStockTable = false) {
+        function filterTable(searchInputId, dataArray, populateFunction, isProcessedOrderTable = false, isAuditLogTable = false, isPendingOrderTable = false, isDashboardMovementList = false, isLowStockTable = false) {
             const searchTerm = document.getElementById(searchInputId).value.toLowerCase();
             let filteredData = [];
 
-            if (isMovementTable) {
-                const activeTab = document.querySelector('#movimentacoes-view .tab-button.active');
-                let movementType = '';
-                if (activeTab && activeTab.id === 'tab-saidas') movementType = 'Saída - Pedido';
-                else if (activeTab && activeTab.id === 'tab-entradas') movementType = 'Entrada - Manual';
-                else if (activeTab && activeTab.id === 'tab-producao') movementType = 'Produção - Conjunto Pronto';
-
+            if (isProcessedOrderTable) { // NOVO: Filtro para pedidos processados
                 filteredData = dataArray.filter(item => {
-                    const matchesType = item.tipo === movementType;
-                    const matchesSearch = JSON.stringify(item).toLowerCase().includes(searchTerm);
-                    return matchesType && matchesSearch;
+                    const osMatch = item.os_number && item.os_number.toLowerCase().includes(searchTerm);
+                    const cityMatch = item.cidade_destino && item.cidade_destino.toLowerCase().includes(searchTerm);
+                    const itemsMatch = Array.isArray(item.itens) && item.itens.some(i => 
+                        (i.modelo_cja && i.modelo_cja.toLowerCase().includes(searchTerm)) || 
+                        (i.tampo_tipo && i.tampo_tipo.toLowerCase().includes(searchTerm)) ||
+                        (i.componente && i.componente.toLowerCase().includes(searchTerm))
+                    );
+                    return osMatch || cityMatch || itemsMatch;
                 });
             } else if (isAuditLogTable) { 
                 filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
             } else if (isPendingOrderTable) { 
-                filteredData = dataArray.filter(item => JSON.stringify(item).toLowerCase().includes(searchTerm));
+                filteredData = dataArray.filter(item => {
+                    const osMatch = item.os_number && item.os_number.toLowerCase().includes(searchTerm);
+                    const cityMatch = item.cidade_destino && item.cidade_destino.toLowerCase().includes(searchTerm);
+                    const statusMatch = item.status && item.status.toLowerCase().includes(searchTerm);
+                    const itemsMatch = Array.isArray(item.itens) && item.itens.some(i => 
+                        (i.modelo_cja && i.modelo_cja.toLowerCase().includes(searchTerm)) || 
+                        (i.tampo_tipo && i.tampo_tipo.toLowerCase().includes(searchTerm)) ||
+                        (i.componente && i.componente.toLowerCase().includes(searchTerm))
+                    );
+                    return osMatch || cityMatch || statusMatch || itemsMatch;
+                });
             } else if (isDashboardMovementList) {
                 filteredData = dataArray.filter(item => {
                     const osMatch = item.os_number && item.os_number.toLowerCase().includes(searchTerm);
@@ -1916,7 +1851,7 @@
                 if (isNumeric) {
                     valA = parseFloat(valA) || 0;
                     valB = parseFloat(valB) || 0;
-                } else if (sortKey.includes('timestamp') || sortKey.includes('date') || sortKey.includes('created_at') || sortKey.includes('updated_at')) { 
+                } else if (sortKey.includes('timestamp') || sortKey.includes('date') || sortKey.includes('created_at') || sortKey.includes('updated_at') || sortKey.includes('processed_at')) { 
                     valA = new Date(valA).getTime();
                     valB = new Date(valB).getTime();
                 } else {
@@ -1942,8 +1877,7 @@
         // Função fetchData com logs detalhados
         async function fetchData(endpoint, method = 'GET', body = null) {
             console.log(`Iniciando requisição para: ${endpoint}`);
-            const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; // Sua URL base do backend
-            const token = localStorage.getItem('token'); // Ou como você armazena seu token
+            const token = currentUser.token; // Use currentUser.token
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -2177,34 +2111,44 @@
                     });
                 } else {
                     models.forEach(model => {
-                        const assentoZurichQty = stockMap[`ASSENTO-ZURICH-${model}`] || 0;
-                        const encostoZurichQty = stockMap[`ENCOSTO-ZURICH-${model}`] || 0;
-                        const assentoMasticmolQty = stockMap[`ASSENTO-MASTICMOL-${model}`] || 0;
-                        const encostoMasticmolQty = stockMap[`ENCOSTO-MASTICMOL-${model}`] || 0;
-                        const portaLivroQty = stockMap['PORTA-LIVRO'] || 0; 
-
-                        hasData = true; 
-                        const row = document.createElement('tr');
-                        row.className = 'border-b border-gray-200 hover:bg-gray-100';
-                        if (tableId === 'table-porta-livro') {
+                        // Only populate if it's PORTA-LIVRO or a specific CJA model
+                        if (tableId === 'table-porta-livro' && model === 'PORTA-LIVRO') {
+                            const portaLivroQty = stockMap['PORTA-LIVRO'] || 0; 
+                            const row = document.createElement('tr');
+                            row.className = 'border-b border-gray-200 hover:bg-gray-100';
                             row.innerHTML = `
                                 <td class="py-3 px-6 text-left">PORTA-LIVRO</td>
                                 <td class="py-3 px-6 text-left">${portaLivroQty}</td>
                             `;
-                        } else if (typePrefix === 'ZURICH') {
-                            row.innerHTML = `
-                                <td class="py-3 px-6 text-left">${model}</td>
-                                <td class="py-3 px-6 text-left">${assentoZurichQty}</td>
-                                <td class="py-3 px-6 text-left">${encostoZurichQty}</td>
-                            `;
-                        } else if (typePrefix === 'MASTICMOL') {
-                            row.innerHTML = `
-                                <td class="py-3 px-6 text-left">${model}</td>
-                                <td class="py-3 px-6 text-left">${assentoMasticmolQty}</td>
-                                <td class="py-3 px-6 text-left">${encostoMasticmolQty}</td>
-                            `;
+                            tbody.appendChild(row);
+                            hasData = true;
+                        } else if (CJA_MODELS.includes(model)) { // Check if it's a valid CJA model
+                            const assentoZurichQty = stockMap[`ASSENTO-ZURICH-${model}`] || 0;
+                            const encostoZurichQty = stockMap[`ENCOSTO-ZURICH-${model}`] || 0;
+                            const assentoMasticmolQty = stockMap[`ASSENTO-MASTICMOL-${model}`] || 0;
+                            const encostoMasticmolQty = stockMap[`ENCOSTO-MASTICMOL-${model}`] || 0;
+                            
+                            const row = document.createElement('tr');
+                            row.className = 'border-b border-gray-200 hover:bg-gray-100';
+
+                            if (typePrefix === 'ZURICH') {
+                                row.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${model}</td>
+                                    <td class="py-3 px-6 text-left">${assentoZurichQty}</td>
+                                    <td class="py-3 px-6 text-left">${encostoZurichQty}</td>
+                                `;
+                                tbody.appendChild(row);
+                                hasData = true;
+                            } else if (typePrefix === 'MASTICMOL') {
+                                row.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${model}</td>
+                                    <td class="py-3 px-6 text-left">${assentoMasticmolQty}</td>
+                                    <td class="py-3 px-6 text-left">${encostoMasticmolQty}</td>
+                                `;
+                                tbody.appendChild(row);
+                                hasData = true;
+                            }
                         }
-                        tbody.appendChild(row);
                     });
                 }
 
@@ -2222,44 +2166,32 @@
         }
 
 
-        async function loadMovimentacoes() {
-            const movimentacoesData = await fetchData('/movimentacoes');
-            if (movimentacoesData) {
-                currentMovimentacoesData = movimentacoesData; 
-                populateMovimentacoesTable(movimentacoesData);
+        // NOVO: Função para carregar Pedidos Processados (Movimentações)
+        async function loadProcessedOrders() {
+            const processedOrdersData = await fetchData('/pedidos_processados');
+            if (processedOrdersData) {
+                currentProcessedOrdersData = processedOrdersData;
+                populateProcessedOrdersTable(processedOrdersData);
             }
         }
 
-        function populateMovimentacoesTable(data) {
-            const saidasTableBody = document.getElementById('table-saidas');
-            const noSaidasData = document.getElementById('no-saidas-data');
-            const entradasTableBody = document.getElementById('table-entradas');
-            const noEntradasData = document.getElementById('no-entradas-data');
-            const producaoTableBody = document.getElementById('table-producao');
-            const noProducaoData = document.getElementById('no-producao-data');
+        // NOVO: Função para popular a tabela de Pedidos Processados
+        function populateProcessedOrdersTable(data) {
+            const tableBody = document.getElementById('processed-orders-table-body');
+            const noDataElement = document.getElementById('no-processed-orders-data');
+            tableBody.innerHTML = '';
 
-            [saidasTableBody, entradasTableBody, producaoTableBody].forEach(table => {
-                if (table && table.getElementsByTagName('tbody')[0]) {
-                    table.getElementsByTagName('tbody')[0].innerHTML = '';
-                }
-            });
+            if (data && data.length > 0) {
+                data.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-100';
 
-            let hasSaidas = false;
-            let hasEntradas = false;
-            let hasProducao = false;
-
-            data.forEach(mov => {
-                const row = document.createElement('tr');
-                row.className = 'border-b border-gray-200 hover:bg-gray-100';
-                const timestampFormatted = mov.timestamp ? new Date(mov.timestamp).toLocaleString('pt-BR') : 'N/A';
-                const registradoPor = mov.registrado_por || 'N/A';
-
-                if (mov.tipo === "Saída - Pedido") { 
-                    hasSaidas = true;
-                    // Certifique-se de que mov.itens é um array antes de chamar .map()
-                    const conjuntosPedidos = Array.isArray(mov.itens) ? mov.itens.map(item => {
+                    const dataEmissao = order.data_emissao ? new Date(order.data_emissao).toLocaleDateString('pt-BR') : 'N/A';
+                    const prazoEntrega = order.prazo_entrega ? new Date(order.prazo_entrega).toLocaleDateString('pt-BR') : 'N/A';
+                    const processedAt = order.processed_at ? new Date(order.processed_at).toLocaleString('pt-BR') : 'N/A';
+                    
+                    const itensResumo = Array.isArray(order.itens) ? order.itens.map(item => {
                         let itemStr = `${item.quantidade}x `;
-                        // Ajuste para exibir corretamente o nome do item
                         if (item.modelo_cja && item.tampo_tipo) {
                             itemStr += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                         } else if (item.componente) {
@@ -2271,64 +2203,22 @@
                     }).join(', ') : 'N/A';
 
                     row.innerHTML = `
-                        <td class="py-3 px-6 text-left">${timestampFormatted}</td>
-                        <td class="py-3 px-6 text-left">${mov.os_number}</td>
-                        <td class="py-3 px-6 text-left">${mov.cidade_destino || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">
-                            <button data-os-number="${mov.os_number}" data-itens="${escape(JSON.stringify(mov.itens || []))}" data-cidade-destino="${mov.cidade_destino}" data-data-emissao="${mov.data_emissao}" data-prazo-entrega="${mov.prazo_entrega}" class="text-indigo-500 hover:underline show-order-details-btn">
-                                ${conjuntosPedidos}
-                            </button>
-                        </td>
-                        <td class="py-3 px-6 text-left">${registradoPor}</td>
-                    `;
-                    saidasTableBody.getElementsByTagName('tbody')[0].appendChild(row);
-                } else if (mov.tipo === "Entrada - Manual") { 
-                    hasEntradas = true;
-                    const itensResumo = Array.isArray(mov.itens) ? mov.itens.map(item => {
-                        let itemStr = `${item.quantidade}x `;
-                        itemStr += item.componente || 'N/A';
-                        return itemStr;
-                    }).join(', ') : 'N/A';
-
-                    row.innerHTML = `
-                        <td class="py-3 px-6 text-left">${timestampFormatted}</td>
-                        <td class="py-3 px-6 text-left">${mov.tipo_entrada || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">${mov.descricao || 'N/A'}</td>
+                        <td class="py-3 px-6 text-left">${order.os_number || 'N/A'}</td>
+                        <td class="py-3 px-6 text-left">${order.cidade_destino || 'N/A'}</td>
+                        <td class="py-3 px-6 text-left">${dataEmissao}</td>
+                        <td class="py-3 px-6 text-left">${prazoEntrega}</td>
                         <td class="py-3 px-6 text-left">${itensResumo}</td>
-                        <td class="py-3 px-6 text-left">${registradoPor}</td>
+                        <td class="py-3 px-6 text-left">${order.processed_by || 'N/A'}</td>
+                        <td class="py-3 px-6 text-left">${processedAt}</td>
                     `;
-                    entradasTableBody.getElementsByTagName('tbody')[0].appendChild(row);
-                } else if (mov.tipo === "Produção - Conjunto Pronto") { 
-                    hasProducao = true;
-                    row.innerHTML = `
-                        <td class="py-3 px-6 text-left">${timestampFormatted}</td>
-                        <td class="py-3 px-6 text-left">${mov.tipo_cja || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">${mov.modelo_cja || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">${mov.tampo_tipo || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">${mov.quantidade || 0}</td>
-                        <td class="py-3 px-6 text-left">${mov.destino_estoque || 'N/A'}</td>
-                        <td class="py-3 px-6 text-left">${registradoPor}</td>
-                    `;
-                    producaoTableBody.getElementsByTagName('tbody')[0].appendChild(row);
-                }
-            });
-
-            if (noSaidasData) noSaidasData.style.display = hasSaidas ? 'none' : 'block';
-            if (noEntradasData) noEntradasData.style.display = hasEntradas ? 'none' : 'block';
-            if (noProducaoData) noProducaoData.style.display = hasProducao ? 'none' : 'block';
-
-            // Adiciona event listeners para os botões de detalhes de ordem
-            document.querySelectorAll('.show-order-details-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const osNumber = event.target.dataset.osNumber;
-                    const itens = JSON.parse(unescape(event.target.dataset.itens));
-                    const cidadeDestino = event.target.dataset.cidadeDestino;
-                    const dataEmissao = event.target.dataset.dataEmissao;
-                    const prazoEntrega = event.target.dataset.prazoEntrega;
-                    showOrderDetailsModal(osNumber, itens, cidadeDestino, dataEmissao, prazoEntrega);
+                    tableBody.appendChild(row);
                 });
-            });
+                noDataElement.style.display = 'none';
+            } else {
+                noDataElement.style.display = 'block';
+            }
         }
+
 
         async function loadDashboardData() {
             showLoading(); // Inicia o spinner de carregamento
@@ -2858,7 +2748,6 @@
 
                 tampoTypes.forEach(tampoType => {
                     let minProductionForTampoType = 0; 
-
                     const portaLivroQty = stockMap['PORTA-LIVRO'] || 0;
 
                     let relevantTampoQty = 0;
@@ -2948,10 +2837,24 @@
             });
 
             const labels = Object.keys(monthlyOrderData).sort((a, b) => {
-                const [monthA, yearA] = a.split('/');
-                const [monthB, yearB] = b.split('/');
-                const dateA = new Date(`01 ${monthA} 20${yearA}`);
-                const dateB = new Date(`01 ${monthB} 20${yearB}`);
+                const year = new Date().getFullYear(); 
+                let dateA, dateB;
+
+                if (a.includes('/')) { // Check if it's "MMM/YY" format
+                    const [monthStrA, yearStrA] = a.split('/');
+                    const [monthStrB, yearStrB] = b.split('/');
+                    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                    const monthIndexA = monthNames.indexOf(monthStrA);
+                    const monthIndexB = monthNames.indexOf(monthStrB);
+                    dateA = new Date(`20${yearStrA}`, monthIndexA, 1);
+                    dateB = new Date(`20${yearStrB}`, monthIndexB, 1);
+                } else { // Assume it's "Semana X/YY" format or similar, handle as generic string sort
+                    dateA = new Date(a); // Attempt to parse as date
+                    dateB = new Date(b);
+                    if (isNaN(dateA) || isNaN(dateB)) { // If not valid dates, fallback to string comparison
+                        return a.localeCompare(b);
+                    }
+                }
                 return dateA - dateB;
             });
 
@@ -2959,6 +2862,12 @@
 
             if (orderMovementsChartInstance) {
                 orderMovementsChartInstance.destroy(); 
+            }
+
+            const ctx = chartCanvas?.getContext('2d');
+            if (!ctx) {
+                console.error("Canvas para o gráfico de movimentações de pedidos não encontrado.");
+                return;
             }
 
             orderMovementsChartInstance = new Chart(ctx, {
@@ -3383,6 +3292,7 @@
                                 <option value="Feito" ${order.status === 'Feito' ? 'selected' : ''}>Feito</option>
                             </select>
                             <button data-order-id="${order.id}" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs ml-2 delete-pending-order-btn"><i class="fas fa-trash"></i> Deletar</button>
+                            <button data-order-id="${order.id}" class="bg-green-500 hover:bg-green-700 text-white py-1 px-3 rounded text-xs ml-2 process-pending-order-btn"><i class="fas fa-check"></i> Processar</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -3406,16 +3316,19 @@
                     confirmAction('Tem certeza que deseja deletar este pedido pendente?', () => deletePedidoPendente(orderId));
                 });
             });
+            document.querySelectorAll('.process-pending-order-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const orderId = event.target.dataset.orderId;
+                    processPendingOrder(orderId);
+                });
+            });
         }
 
         async function deletePedidoPendente(id) {
             const result = await deleteData(`/pedidos_pendentes/${id}`);
             if (result) {
                 showToast(result.message, 'success');
-                loadPendingOrders();
-                loadEstoque();
-                loadMovimentacoes();
-                loadDashboardData();
+                // onSnapshot listeners will handle UI refresh automatically
             }
         }
 
@@ -3427,13 +3340,90 @@
                 const result = await putData(`/pedidos_pendentes/${orderId}`, data);
                 if (result) {
                     showToast(result.message, 'success');
-                    loadPendingOrders(); 
-                    loadEstoque(); 
-                    loadMovimentacoes(); 
-                    loadDashboardData(); 
+                    // onSnapshot listeners will handle UI refresh automatically
                 }
             });
         }
+
+        // NOVO: Função para processar pedido pendente
+        async function processPendingOrder(orderId) {
+            if (currentUser.role === 'visualizador') {
+                await showMessageBox('Acesso Negado', 'Você não tem permissão para processar pedidos.', 'alert');
+                return;
+            }
+
+            const confirmProcess = await showMessageBox('Confirmar Processamento', 'Tem certeza que deseja processar este pedido? Isso irá deduzir os itens do estoque e mover o pedido para o histórico de movimentações.', 'confirm');
+            if (!confirmProcess) {
+                return;
+            }
+
+            try {
+                showLoading();
+                // Fetch the order details first
+                const orderDocRef = doc(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_pendentes`, orderId);
+                const orderDocSnap = await getDoc(orderDocRef);
+
+                if (!orderDocSnap.exists()) {
+                    throw new Error("Pedido não encontrado ou já processado.");
+                }
+                const orderData = orderDocSnap.data();
+                const orderItems = orderData.itens;
+
+                await runTransaction(db, async (transaction) => {
+                    // 1. Check and decrement stock for each item
+                    for (const item of orderItems) {
+                        let componentNameInStock = '';
+                        // Determine the correct component name based on item type
+                        if (item.modelo_cja && item.tampo_tipo) {
+                            componentNameInStock = `CONJUNTO-PRONTO-LOCAL-${item.tipo_cja}-${item.modelo_cja}-${item.tampo_tipo}`;
+                        } else if (item.componente) {
+                            componentNameInStock = item.componente;
+                        } else {
+                            throw new Error(`Item inválido no pedido: ${JSON.stringify(item)}`);
+                        }
+
+                        const productQuery = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/estoque`), where("modelo", "==", componentNameInStock));
+                        const productSnapshot = await transaction.get(productQuery);
+
+                        if (productSnapshot.empty) {
+                            throw new Error(`Estoque: Produto '${componentNameInStock}' não encontrado. Por favor, cadastre-o.`);
+                        }
+
+                        const productDoc = productSnapshot.docs[0];
+                        const productRef = productDoc.ref;
+                        const currentStock = productDoc.data().quantidade;
+                        const newStock = currentStock - item.quantidade;
+
+                        if (newStock < 0) {
+                            throw new Error(`Estoque insuficiente para o produto '${componentNameInStock}'. Estoque atual: ${currentStock}, Necessário: ${item.quantidade}.`);
+                        }
+                        transaction.update(productRef, { quantidade: newStock });
+                    }
+
+                    // 2. Move the order from pending_orders to processed_orders
+                    const processedOrderRef = doc(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_processados`, orderId);
+                    const newProcessedOrderData = {
+                        ...orderData,
+                        status: "Processado",
+                        processed_by: currentUser.username,
+                        processed_at: new Date().toISOString()
+                    };
+                    transaction.set(processedOrderRef, newProcessedOrderData); // Use set with existing ID
+
+                    // 3. Delete from pending_orders
+                    transaction.delete(orderDocRef);
+                });
+
+                await showMessageBox('Sucesso', 'Pedido processado e estoque atualizado com sucesso!', 'alert');
+                // onSnapshot listeners will automatically refresh UI
+            } catch (error) {
+                console.error("Erro detalhado ao processar pedido:", error);
+                await showMessageBox('Erro', `Erro ao processar pedido: ${error.message || error}`, 'alert');
+            } finally {
+                hideLoading();
+            }
+        }
+
 
         function confirmAction(message, callback) {
             document.getElementById('confirmModalMessage').textContent = message;
@@ -3577,15 +3567,6 @@
                             console.error(`Mapeamento para o link ID '${link.id}' não encontrado.`);
                         }
                     }
-                    
-                    // Fecha a sidebar em mobile após clicar no link
-                    if (window.innerWidth < 768) {
-                        const sidebar = document.getElementById('sidebar');
-                        const mainContent = document.getElementById('main-content-wrapper');
-                        sidebar.classList.remove('active');
-                        sidebar.classList.add('collapsed');
-                        mainContent.classList.remove('expanded');
-                    }
                 });
             });
 
@@ -3597,9 +3578,12 @@
                     sidebar.classList.remove('active'); // Garante que a classe 'active' do mobile seja removida
                     sidebar.classList.remove('collapsed'); // Estado padrão no desktop
                     mainContent.classList.remove('expanded');
+                    document.getElementById('sidebar-overlay').classList.remove('active'); // Esconde overlay em desktop
                 } else {
-                    sidebar.classList.remove('active'); // Começa colapsada no mobile
-                    sidebar.classList.add('collapsed');
+                    // No mobile, a sidebar deve estar "colapsada" (escondida) por padrão, a menos que ativa
+                    if (!sidebar.classList.contains('active')) {
+                        sidebar.classList.add('collapsed');
+                    }
                     mainContent.classList.remove('expanded');
                 }
             });
@@ -3817,8 +3801,9 @@
                     document.getElementById('reajusteQuantidade').value = '1';
 
                     loadEstoque();
-                    loadMovimentacoes();
+                    // loadMovimentacoes(); // Movimentações agora mostra pedidos processados, não reajustes
                     loadDashboardData();
+                    loadAuditLogs(); // Audit logs will show reajustes
                 }
             });
 
@@ -3914,7 +3899,7 @@
                     tipo: "Saída - Pedido" // Tipo fixo para saída manual
                 };
 
-                const result = await postData('/movimentacoes', data);
+                const result = await postData('/movimentacoes', data); // This endpoint will handle stock deduction and audit log
                 if (result) {
                     showToast(result.message, 'success');
                     document.getElementById('formSaidaManual').reset();
@@ -3923,8 +3908,9 @@
                     updateConjuntoItemsDisplay('saida');
                     updateAvulsaItemsDisplay('saida');
                     loadEstoque();
-                    loadMovimentacoes();
+                    // loadMovimentacoes(); // This is now for processed orders, not raw movements
                     loadDashboardData();
+                    loadAuditLogs(); // Audit logs will show manual exits
                     closeModal('saidaManualModal');
                 }
             });
@@ -3946,10 +3932,10 @@
                 closeModal('lowStockModal');
             });
 
-            // Event listeners para as abas de movimentações
-            document.getElementById('tab-saidas')?.addEventListener('click', (event) => showMovementType('saidas', event.target));
-            document.getElementById('tab-entradas')?.addEventListener('click', (event) => showMovementType('entradas', event.target));
-            document.getElementById('tab-producao')?.addEventListener('click', (event) => showMovementType('producao', event.target)); 
+            // Event listeners para as abas de movimentações - REMOVIDAS, pois "Movimentações" agora é para pedidos processados
+            // document.getElementById('tab-saidas')?.addEventListener('click', (event) => showMovementType('saidas', event.target));
+            // document.getElementById('tab-entradas')?.addEventListener('click', (event) => showMovementType('entradas', event.target));
+            // document.getElementById('tab-producao')?.addEventListener('click', (event) => showMovementType('producao', event.target)); 
         
             // Event listener para o formulário de criação de usuário
             document.getElementById('formCreateUser')?.addEventListener('submit', async function(event) {
@@ -3979,8 +3965,8 @@
             document.getElementById('search-conjuntos-prontos-distrito')?.addEventListener('input', () => {
                 filterTable('search-conjuntos-prontos-distrito', currentEstoqueData, populateEstoqueTables);
             });
-            document.getElementById('search-movimentacoes')?.addEventListener('input', () => {
-                filterTable('search-movimentacoes', currentMovimentacoesData, populateMovimentacoesTable, true);
+            document.getElementById('search-processed-orders')?.addEventListener('input', () => { // NOVO: Search para pedidos processados
+                filterTable('search-processed-orders', currentProcessedOrdersData, populateProcessedOrdersTable, true);
             });
             document.getElementById('search-audit-log')?.addEventListener('input', () => { 
                 filterTable('search-audit-log', currentAuditLogData, populateAuditLogsTable, false, true);
@@ -4028,14 +4014,9 @@
                 header.addEventListener('click', () => sortTable('table-low-stock', currentLowStockData, populateLowStockTable, header.dataset.sortKey));
             });
 
-            document.querySelectorAll('#table-saidas th[data-sort-key]').forEach(header => {
-                header.addEventListener('click', () => sortTable('table-saidas', currentMovimentacoesData.filter(mov => mov.tipo === "Saída - Pedido"), populateMovimentacoesTable, header.dataset.sortKey));
-            });
-            document.querySelectorAll('#table-entradas th[data-sort-key]').forEach(header => {
-                header.addEventListener('click', () => sortTable('table-entradas', currentMovimentacoesData.filter(mov => mov.tipo === "Entrada - Manual"), populateMovimentacoesTable, header.dataset.sortKey));
-            });
-            document.querySelectorAll('#table-producao th[data-sort-key]').forEach(header => {
-                header.addEventListener('click', () => sortTable('table-producao', currentMovimentacoesData.filter(mov => mov.tipo === "Produção - Conjunto Pronto"), populateMovimentacoesTable, header.dataset.sortKey));
+            // NOVO: Event listener para ordenação da tabela de pedidos processados
+            document.querySelectorAll('#table-processed-orders th[data-sort-key]').forEach(header => {
+                header.addEventListener('click', () => sortTable('table-processed-orders', currentProcessedOrdersData, populateProcessedOrdersTable, header.dataset.sortKey));
             });
 
             document.querySelectorAll('#table-audit-log th[data-sort-key]').forEach(header => { 
@@ -4087,14 +4068,49 @@
                     updateLoggedInUserDisplay();
                     checkUserRoleAccess();
                     showSection('dashboard-view'); // Garante que a view inicial seja o dashboard
+
+                    // Setup real-time listeners for Firestore collections
+                    // Products listener (Estoque de Componentes, Conjuntos Prontos, Distrito)
+                    onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/estoque`), (snapshot) => {
+                        const estoqueData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        currentEstoqueData = estoqueData; // Update global data
+                        populateEstoqueTables(estoqueData); // Re-render all estoque tables
+                        loadDashboardData(); // Reload dashboard to update counts and charts based on new stock
+                    });
+
+                    // Pending Orders listener
+                    onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_pendentes`), (snapshot) => {
+                        const pendingOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        currentPendingOrdersData = pendingOrders; // Update global data
+                        document.getElementById('pending-orders-count').textContent = pendingOrders.length;
+                        populatePendingOrdersTable(pendingOrders);
+                        renderOrderMovementsChart(pendingOrders); // Update chart with latest pending orders
+                        populateCJAOrdersAnalysisTable(pendingOrders); // Update CJA analysis table
+                    });
+
+                    // Processed Orders listener (Movimentações)
+                    onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_processados`), (snapshot) => {
+                        const processedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        currentProcessedOrdersData = processedOrders; // Update global data
+                        populateProcessedOrdersTable(processedOrders);
+                    });
+
+                    // Movimentacoes (for Audit Log and Dashboard counters)
+                    onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/movimentacoes`), (snapshot) => {
+                        const movimentacoes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        currentMovimentacoesData = movimentacoes; // Update global data
+                        loadAuditLogs(); // Reload audit logs
+                        loadDashboardData(); // Reload dashboard to update monthly/weekly counters
+                    });
+
+                    // Initial fetch for users (not real-time via onSnapshot as it's an API call)
+                    fetchUsers(); 
+
                 } else {
                     currentUser.token = null;
                     currentUser.username = null;
                     currentUser.role = null;
                     currentUser.firebaseUser = null;
-                    localStorage.removeItem('token'); // <--- CORRIGIDO: Remove o token do localStorage
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('role');
                     showLoginScreen();
                 }
             });
