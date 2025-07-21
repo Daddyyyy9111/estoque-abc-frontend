@@ -314,6 +314,37 @@
             .flex.items-end { flex-direction: column; align-items: stretch; }
             .flex.items-end > div { width: 100%; margin-bottom: 0.5rem; }
             .flex.items-end button { width: 100%; margin-top: 0.5rem; }
+
+            /* Specific adjustments for pending orders table on mobile */
+            #table-pending-orders th,
+            #table-pending-orders td {
+                white-space: nowrap; /* Prevent text wrapping in table headers/cells */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px; /* Limit width to ensure actions are visible */
+            }
+
+            #table-pending-orders td:nth-child(3) { /* Itens column */
+                max-width: 150px;
+            }
+            #table-pending-orders td:nth-child(9) { /* Actions column */
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                align-items: flex-start;
+                max-width: 150px; /* Adjust as needed */
+            }
+            #table-pending-orders td:nth-child(9) .select-field {
+                width: 100%;
+                font-size: 0.75rem;
+                padding: 0.25rem;
+            }
+            #table-pending-orders td:nth-child(9) button {
+                width: 100%;
+                font-size: 0.75rem;
+                padding: 0.25rem;
+                margin-left: 0 !important; /* Override ml-2 */
+            }
         }
 
         /* Toast Styles */
@@ -482,15 +513,15 @@
     <div id="dashboardMovementsModal" class="modal-overlay hidden">
         <div class="modal-content w-full md:max-w-3xl lg:max-w-4xl">
             <button id="closeDashboardMovementsModal" class="modal-close-button">&times;</button>
-            <h3 class="text-2xl font-semibold text-gray-700 mb-6" id="dashboardMovementsModalTitle">Detalhes das Movimentações</h3>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-6" id="dashboardMovementsModalTitle">Detalhes dos Pedidos Processados</h3>
             <div class="mb-4">
                 <label for="search-dashboard-movements" class="block text-gray-700 text-sm font-bold mb-2">Pesquisar por OS:</label>
                 <input type="text" id="search-dashboard-movements" class="input-field" placeholder="Digite para pesquisar por OS...">
             </div>
             <div id="dashboard-movements-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Pedidos serão inseridos aqui em blocos -->
+                <!-- Pedidos Processados serão inseridos aqui em blocos -->
             </div>
-            <p id="no-dashboard-movements-data" class="no-data mt-4">Nenhuma movimentação encontrada.</p>
+            <p id="no-dashboard-movements-data" class="no-data mt-4">Nenhum pedido processado encontrado.</p>
         </div>
     </div>
 
@@ -634,11 +665,11 @@
                         <p class="text-3xl md:text-4xl font-bold text-indigo-600" id="total-items">0</p>
                     </div>
                     <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-monthly-movements">
-                        <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Movimentações do Mês</h3>
+                        <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Pedidos Processados (Mês)</h3>
                         <p class="text-3xl md:text-4xl font-bold text-green-600" id="monthly-movements">0</p>
                     </div>
                     <div class="card cursor-pointer hover:bg-gray-50 transition duration-200" id="card-weekly-movements">
-                        <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Movimentações da Semana</h3>
+                        <h3 class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Pedidos Processados (Semana)</h3>
                         <p class="text-3xl md:text-4xl font-bold text-blue-600" id="weekly-movements">0</p>
                     </div>
                 </div>
@@ -2226,7 +2257,7 @@
             try {
                 const estoqueData = await fetchData('/estoque');
                 const pendingOrdersData = await fetchData('/pedidos_pendentes'); // Fetch pending orders
-                const movimentacoesData = await fetchData('/movimentacoes'); // Still needed for other dashboard metrics
+                const processedOrdersData = await fetchData('/pedidos_processados'); // Fetch processed orders for dashboard counts
 
                 if (estoqueData) {
                     let totalItems = 0;
@@ -2295,29 +2326,29 @@
                     populateProducaoMinima(estoqueData); 
                 }
 
-                // Update monthly and weekly movements based on *movimentacoesData* (stock movements)
-                if (movimentacoesData) {
+                // Update monthly and weekly movements based on *processedOrdersData* (NOT movimentacoesData)
+                if (processedOrdersData) {
                     const today = new Date();
                     const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
                     const oneWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
 
-                    const monthlyMovements = movimentacoesData.filter(mov => {
-                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                        return movDate && movDate >= oneMonthAgo;
+                    const monthlyProcessedOrders = processedOrdersData.filter(order => {
+                        const orderDate = order.processed_at ? new Date(order.processed_at) : null;
+                        return orderDate && orderDate >= oneMonthAgo;
                     });
-                    const weeklyMovements = movimentacoesData.filter(mov => {
-                        const movDate = mov.timestamp ? new Date(mov.timestamp) : null;
-                        return movDate && movDate >= oneWeekAgo;
+                    const weeklyProcessedOrders = processedOrdersData.filter(order => {
+                        const orderDate = order.processed_at ? new Date(order.processed_at) : null;
+                        return orderDate && orderDate >= oneWeekAgo;
                     });
 
                     const monthlyMovementsElement = document.getElementById('monthly-movements');
-                    if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyMovements.length;
+                    if (monthlyMovementsElement) monthlyMovementsElement.textContent = monthlyProcessedOrders.length;
                     const weeklyMovementsElement = document.getElementById('weekly-movements');
-                    if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyMovements.length;
+                    if (weeklyMovementsElement) weeklyMovementsElement.textContent = weeklyProcessedOrders.length;
 
                     currentDashboardMovementsData = {
-                        monthly: monthlyMovements,
-                        weekly: weeklyMovements
+                        monthly: monthlyProcessedOrders, // Store processed orders
+                        weekly: weeklyProcessedOrders   // Store processed orders
                     };
                 }
 
@@ -2365,10 +2396,10 @@
 
             let dataToDisplay = [];
             if (type === 'monthly') {
-                modalTitle.textContent = 'Movimentações do Mês';
+                modalTitle.textContent = 'Pedidos Processados do Mês';
                 dataToDisplay = currentDashboardMovementsData.monthly;
             } else if (type === 'weekly') {
-                modalTitle.textContent = 'Movimentações da Semana';
+                modalTitle.textContent = 'Pedidos Processados da Semana';
                 dataToDisplay = currentDashboardMovementsData.weekly;
             }
 
@@ -2418,25 +2449,29 @@
             listContainer.innerHTML = '';
 
             if (data && data.length > 0) {
-                data.forEach(mov => {
+                data.forEach(order => { // Agora é um "order" (pedido processado)
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'movement-block'; // Use a classe customizada
                     
-                    const dataEmissaoFormatada = mov.data_emissao ? new Date(mov.data_emissao).toLocaleDateString('pt-BR') : 'N/A';
+                    const dataEmissaoFormatada = order.data_emissao ? new Date(order.data_emissao).toLocaleDateString('pt-BR') : 'N/A';
+                    const processedAtFormatado = order.processed_at ? new Date(order.processed_at).toLocaleString('pt-BR') : 'N/A';
 
                     itemDiv.innerHTML = `
                         <div class="movement-block-header">
                             <div>
-                                <p>OS: ${mov.os_number || 'N/A'}</p>
-                                <p>Município: ${mov.cidade_destino || 'N/A'}</p>
-                                <p>Data: ${dataEmissaoFormatada}</p>
+                                <p>OS: ${order.os_number || 'N/A'}</p>
+                                <p>Município: ${order.cidade_destino || 'N/A'}</p>
+                                <p>Processado em: ${processedAtFormatado}</p>
                             </div>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="movement-block-details">
-                            <h4 class="text-md font-semibold text-gray-700 mb-2">Itens do Pedido:</h4>
+                            <p>Data de Emissão: ${dataEmissaoFormatada}</p>
+                            <p>Prazo de Entrega: ${order.prazo_entrega ? new Date(order.prazo_entrega).toLocaleDateString('pt-BR') : 'N/A'}</p>
+                            <p>Processado por: ${order.processed_by || 'N/A'}</p>
+                            <h4 class="text-md font-semibold text-gray-700 mb-2 mt-4">Itens do Pedido:</h4>
                             <ul>
-                                ${Array.isArray(mov.itens) ? mov.itens.map(item => { // Adicionado verificação aqui
+                                ${Array.isArray(order.itens) ? order.itens.map(item => { 
                                     let itemDisplay = `${item.quantidade || 'N/A'}x `;
                                     if (item.modelo_cja && item.tampo_tipo) {
                                         itemDisplay += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
@@ -3251,13 +3286,15 @@
                     const updatedDate = order.updated_at ? new Date(order.updated_at).toLocaleString('pt-BR') : 'N/A';
                     
                     const itensResumo = Array.isArray(order.itens) ? order.itens.map(item => { // Adicionado verificação aqui
+                        let itemStr = `${item.quantidade || 'N/A'}x `;
                         if (item.modelo_cja && item.tampo_tipo) {
-                            return `${item.quantidade}x ${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
+                            itemStr += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                         } else if (item.componente) {
-                            return `${item.quantidade}x ${item.componente}`;
+                            itemStr += item.componente;
                         } else {
-                            return 'N/A';
+                            itemStr += 'N/A';
                         }
+                        return itemStr;
                     }).join(', ') : 'N/A';
 
                     let statusColorClass = '';
@@ -3277,7 +3314,6 @@
                         <td class="py-3 px-6 text-left">${createdDate}</td>
                         <td class="py-3 px-6 text-left">${order.created_by || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">${updatedDate}</td>
-                        <td class="py-3 px-6 text-left">${order.updated_by || 'N/A'}</td>
                         <td class="py-3 px-6 text-left">
                             <select data-order-id="${order.id}" class="select-field text-sm p-1 update-pending-order-status-btn">
                                 <option value="">Mudar Status</option>
@@ -3285,8 +3321,8 @@
                                 <option value="Produzindo" ${order.status === 'Produzindo' ? 'selected' : ''}>Produzindo</option>
                                 <option value="Feito" ${order.status === 'Feito' ? 'selected' : ''}>Feito</option>
                             </select>
-                            <button data-order-id="${order.id}" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs ml-2 delete-pending-order-btn"><i class="fas fa-trash"></i> Deletar</button>
-                            <button data-order-id="${order.id}" class="bg-green-500 hover:bg-green-700 text-white py-1 px-3 rounded text-xs ml-2 process-pending-order-btn"><i class="fas fa-check"></i> Processar</button>
+                            <button data-order-id="${order.id}" class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-xs mt-1 delete-pending-order-btn"><i class="fas fa-trash"></i> Deletar</button>
+                            <button data-order-id="${order.id}" class="bg-green-500 hover:bg-green-700 text-white py-1 px-3 rounded text-xs mt-1 process-pending-order-btn"><i class="fas fa-check"></i> Processar</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -4076,7 +4112,7 @@
                     onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_pendentes`), (snapshot) => {
                         const pendingOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         currentPendingOrdersData = pendingOrders; // Update global data
-                        document.getElementById('pending-orders-count').textContent = pendingOrders.length;
+                        // document.getElementById('pending-orders-count').textContent = pendingOrders.length; // REMOVIDO: Não há elemento para isso
                         populatePendingOrdersTable(pendingOrders);
                         renderOrderMovementsChart(pendingOrders); // Update chart with latest pending orders
                         populateCJAOrdersAnalysisTable(pendingOrders); // Update CJA analysis table
@@ -4087,24 +4123,25 @@
                         const processedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         currentProcessedOrdersData = processedOrders; // Update global data
                         populateProcessedOrdersTable(processedOrders);
+                        loadDashboardData(); // Reload dashboard to update monthly/weekly processed orders
                     });
 
-                    // Movimentacoes (for Audit Log and Dashboard counters)
+                    // Movimentacoes (for Audit Log only)
                     onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/movimentacoes`), (snapshot) => {
                         const movimentacoes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         currentMovimentacoesData = movimentacoes; // Update global data
                         loadAuditLogs(); // Reload audit logs
-                        loadDashboardData(); // Reload dashboard to update monthly/weekly counters
                     });
 
                     // Initial fetch for users (not real-time via onSnapshot as it's an API call)
-                    fetchUsers(); 
+                    loadUsers(); 
 
                 } else {
                     currentUser.token = null;
                     currentUser.username = null;
                     currentUser.role = null;
                     currentUser.firebaseUser = null;
+                    localStorage.removeItem('token'); // Limpa qualquer token antigo
                     showLoginScreen();
                 }
             });
