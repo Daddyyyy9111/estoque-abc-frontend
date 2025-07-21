@@ -345,6 +345,18 @@
                 padding: 0.25rem;
                 margin-left: 0 !important; /* Override ml-2 */
             }
+
+            /* Specific adjustments for processed orders table on mobile */
+            #table-processed-orders th,
+            #table-processed-orders td {
+                white-space: nowrap; /* Prevent text wrapping in table headers/cells */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px; /* Limit width to ensure actions are visible */
+            }
+            #table-processed-orders td:nth-child(5) { /* Itens column */
+                max-width: 150px;
+            }
         }
 
         /* Toast Styles */
@@ -1153,7 +1165,7 @@
                                 <select id="retirarConjuntosTampoTipoDistrito" name="tampo_tipo" class="select-field" required>
                                     <option value="">Selecione o Tampo</option>
                                     <option value="MDF">MDF</option>
-                                    <option value="PLASTICO">PLÁSTICO</option>
+                                    <option value="PLASTICO">PLASTICO</option>
                                     <option value="MASTICMOL">MASTICMOL</option>
                                 </select>
                                 <p id="retirarConjuntosTampoTipoDistrito-validation" class="validation-message">Campo obrigatório.</p>
@@ -1637,7 +1649,7 @@
                 // Toggle 'active' class for mobile sidebar
                 if (window.innerWidth < 768) {
                     sidebar.classList.toggle('active'); 
-                    document.getElementById('sidebar-overlay').classList.toggle('active'); // Toggle overlay
+                    document.getElementById('sidebar-overlay')?.classList.toggle('active'); // Toggle overlay, check for existence
                 } else { // Desktop behavior
                     sidebar.classList.toggle('collapsed');
                     mainContent.classList.toggle('expanded');
@@ -1698,7 +1710,7 @@
                 const sidebar = document.getElementById('sidebar');
                 const sidebarOverlay = document.getElementById('sidebar-overlay');
                 sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
+                sidebarOverlay?.classList.remove('active'); // Check for existence
             }
         }
 
@@ -1908,7 +1920,7 @@
         // Função fetchData com logs detalhados
         async function fetchData(endpoint, method = 'GET', body = null) {
             console.log(`Iniciando requisição para: ${endpoint}`);
-            const token = currentUser.token; // Use currentUser.token
+            const token = currentUser.token;
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -1935,30 +1947,32 @@
                 console.log('Status da resposta para', endpoint, ':', response.status);
                 console.log('Status OK (200-299) para', endpoint, ':', response.ok);
 
+                // Read the response body only once
+                const responseContentType = response.headers.get('content-type');
+                let responseData;
+                if (responseContentType && responseContentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    responseData = await response.text();
+                }
+
                 if (!response.ok) {
-                    // Tenta ler o corpo do erro para mais detalhes, se houver
                     let errorDetails = `Status: ${response.status}`;
-                    try {
-                        const errorJson = await response.json();
-                        errorDetails += ` - JSON: ${JSON.stringify(errorJson)}`;
-                    } catch (jsonError) {
-                        const errorText = await response.text();
-                        errorDetails += ` - Texto: ${errorText}`;
+                    if (typeof responseData === 'object' && responseData !== null && responseData.message) {
+                        errorDetails += ` - Message: ${responseData.message}`;
+                    } else {
+                        errorDetails += ` - Response: ${responseData}`;
                     }
                     console.error(`Erro HTTP para ${endpoint}!`, errorDetails);
                     throw new Error(`HTTP error! ${errorDetails}`);
                 }
 
-                const data = await response.json();
-                console.log('Dados recebidos para', endpoint, ':', data);
-                return data;
+                // If response is OK, return the parsed data
+                return responseData;
 
             } catch (error) {
                 console.error('Erro ao fazer fetch para', endpoint, ':', error);
-                throw error; // Re-lança o erro para que a função chamadora (loadDashboardData) possa pegá-lo
-            } finally {
-                // O hideLoading() foi removido daqui e deve ser chamado pela função que chama fetchData
-                // para garantir que o spinner só seja escondido após todas as chamadas assíncronas serem concluídas.
+                throw error;
             }
         }
 
@@ -3608,7 +3622,7 @@
                     sidebar.classList.remove('active'); // Garante que a classe 'active' do mobile seja removida
                     sidebar.classList.remove('collapsed'); // Estado padrão no desktop
                     mainContent.classList.remove('expanded');
-                    document.getElementById('sidebar-overlay').classList.remove('active'); // Esconde overlay em desktop
+                    document.getElementById('sidebar-overlay')?.classList.remove('active'); // Esconde overlay em desktop, check for existence
                 } else {
                     // No mobile, a sidebar deve estar "colapsada" (escondida) por padrão, a menos que ativa
                     if (!sidebar.classList.contains('active')) {
@@ -3678,18 +3692,18 @@
                 reajusteModeloCJASelect.innerHTML = '<option value="">Selecione o Modelo CJA</option>';
                 reajusteModeloCJASelect.disabled = true;
                 reajusteModeloCJASelect.classList.remove('invalid');
-                document.getElementById('reajusteModeloCJA-validation').classList.remove('show');
+                document.getElementById('reajusteModeloCJA-validation')?.classList.remove('show'); // Check for existence
 
                 reajusteComponenteTipoSelect.innerHTML = '<option value="">Selecione o Tipo de Componente</option>';
                 reajusteComponenteTipoSelect.disabled = true;
                 reajusteComponenteTipoSelect.classList.remove('invalid');
-                document.getElementById('reajusteComponenteTipo-validation').classList.remove('show');
+                document.getElementById('reajusteComponenteTipo-validation')?.classList.remove('show'); // Check for existence
 
                 reajusteTipoTampoSelect.innerHTML = '<option value="">Selecione o Tipo de Tampo</option>'; // Novo
                 reajusteTipoTampoSelect.disabled = true; // Novo
                 reajusteTipoTampoContainer.classList.add('hidden'); // Novo
                 reajusteTipoTampoSelect.classList.remove('invalid'); // Novo
-                document.getElementById('reajusteTipoTampo-validation').classList.remove('show'); // Novo
+                document.getElementById('reajusteTipoTampo-validation')?.classList.remove('show'); // Novo, check for existence
             }
 
             reajusteTipoCJASelect.addEventListener('change', () => {
@@ -3729,7 +3743,7 @@
                     reajusteTipoTampoSelect.disabled = true;
                     reajusteTipoTampoSelect.value = ''; // Limpa a seleção
                     reajusteTipoTampoSelect.classList.remove('invalid');
-                    document.getElementById('reajusteTipoTampo-validation').classList.remove('show');
+                    document.getElementById('reajusteTipoTampo-validation')?.classList.remove('show'); // Check for existence
                 }
             });
 
@@ -3757,10 +3771,10 @@
             populateTampoTypesDropdown('saidaConjuntoTampo', TAMPO_TYPES);
 
             // Event listeners para o novo gráfico de produção CJA
-            document.getElementById('selectCJA').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
-            document.getElementById('selectTampo').addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
-            document.getElementById('producao-cja-semanal-btn').addEventListener('click', () => updateCJAProductionChart('weekly', true));
-            document.getElementById('producao-cja-mensal-btn').addEventListener('click', () => updateCJAProductionChart('monthly', true));
+            document.getElementById('selectCJA')?.addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
+            document.getElementById('selectTampo')?.addEventListener('change', () => updateCJAProductionChart('weekly', true)); 
+            document.getElementById('producao-cja-semanal-btn')?.addEventListener('click', () => updateCJAProductionChart('weekly', true));
+            document.getElementById('producao-cja-mensal-btn')?.addEventListener('click', () => updateCJAProductionChart('monthly', true));
 
 
             // Event listener para o formulário de Reajuste de Estoque
@@ -3839,7 +3853,7 @@
 
 
             // Event listener para adicionar conjunto pronto na Saída Manual
-            document.getElementById('add-saida-conjunto-button').addEventListener('click', () => {
+            document.getElementById('add-saida-conjunto-button')?.addEventListener('click', () => {
                 const tipoCJA = document.getElementById('saidaConjuntoTipoCJA');
                 const modeloCJA = document.getElementById('saidaConjuntoModeloCJA');
                 const tampoTipo = document.getElementById('saidaConjuntoTampo');
@@ -3874,7 +3888,7 @@
             });
 
             // Event listener para adicionar item avulso na Saída Manual
-            document.getElementById('add-saida-item-button').addEventListener('click', () => {
+            document.getElementById('add-saida-item-button')?.addEventListener('click', () => {
                 addManualItem('saida');
             });
 
@@ -4112,7 +4126,6 @@
                     onSnapshot(collection(db, `artifacts/${firebaseConfig.appId}/public/data/pedidos_pendentes`), (snapshot) => {
                         const pendingOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         currentPendingOrdersData = pendingOrders; // Update global data
-                        // document.getElementById('pending-orders-count').textContent = pendingOrders.length; // REMOVIDO: Não há elemento para isso
                         populatePendingOrdersTable(pendingOrders);
                         renderOrderMovementsChart(pendingOrders); // Update chart with latest pending orders
                         populateCJAOrdersAnalysisTable(pendingOrders); // Update CJA analysis table
