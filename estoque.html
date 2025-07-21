@@ -2191,7 +2191,7 @@
                     const processedAt = order.processed_at ? new Date(order.processed_at).toLocaleString('pt-BR') : 'N/A';
                     
                     const itensResumo = Array.isArray(order.itens) ? order.itens.map(item => {
-                        let itemStr = `${item.quantidade}x `;
+                        let itemStr = `${item.quantidade || 'N/A'}x `;
                         if (item.modelo_cja && item.tampo_tipo) {
                             itemStr += `${item.tipo_cja || ''} ${item.modelo_cja} (Tampo: ${item.tampo_tipo})`;
                         } else if (item.componente) {
@@ -2805,11 +2805,18 @@
 
         // NOVO: Função para renderizar o gráfico de movimentações de pedidos
         function renderOrderMovementsChart(pendingOrders) {
-            const ctx = document.getElementById('orderMovementsChart')?.getContext('2d');
-            if (!ctx) {
+            const chartCanvas = document.getElementById('orderMovementsChart');
+            if (!chartCanvas) {
                 console.error("Canvas para o gráfico de movimentações de pedidos não encontrado.");
                 return;
             }
+            // Destrói a instância anterior do gráfico se existir
+            if (orderMovementsChartInstance) {
+                orderMovementsChartInstance.destroy();
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+            
 
             const monthlyOrderData = {};
             const today = new Date();
@@ -2859,16 +2866,6 @@
             });
 
             const quantities = labels.map(label => monthlyOrderData[label]);
-
-            if (orderMovementsChartInstance) {
-                orderMovementsChartInstance.destroy(); 
-            }
-
-            const ctx = chartCanvas?.getContext('2d');
-            if (!ctx) {
-                console.error("Canvas para o gráfico de movimentações de pedidos não encontrado.");
-                return;
-            }
 
             orderMovementsChartInstance = new Chart(ctx, {
                 type: 'bar', // Gráfico de barras para quantidades
@@ -2992,11 +2989,8 @@
                 cjaProductionChartInstance.destroy();
             }
 
-            const ctx = chartCanvas?.getContext('2d');
-            if (!ctx) {
-                console.error("Canvas para o gráfico de produção CJA não encontrado.");
-                return;
-            }
+            const ctx = chartCanvas.getContext('2d');
+            
 
             cjaProductionChartInstance = new Chart(ctx, {
                 type: 'bar', 
