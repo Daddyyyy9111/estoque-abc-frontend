@@ -294,7 +294,7 @@
                 position: fixed; /* Ensure it stays fixed */
                 height: 100%; /* Full height */
             }
-            .sidebar.active {
+            .sidebar.open {
                 transform: translateX(0); /* Slide in */
             }
             .main-content-area {
@@ -1457,7 +1457,7 @@
 
         // URL do seu backend no Render.com
         // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO SEU SERVIÇO DE BACKEND NO RENDER.COM
-        const API_BASE_URL = 'https://estoque-abc-frontend.onrender.com'; // <--- ATUALIZE ESTA URL!
+        const API_BASE_URL = 'COLOQUE_AQUI_A_URL_DO_SEU_BACKEND_NO_RENDER'; // <--- ATUALIZE ESTA URL!
 
         // Firebase configuration (Hardcoded for GitHub Pages deployment)
         const firebaseConfig = {
@@ -3595,6 +3595,9 @@
 
             // Event listener para o toggle da sidebar (mobile)
             document.getElementById('sidebar-toggle-button')?.addEventListener('click', toggleSidebar);
+            // Event listener para o overlay da sidebar (para fechar a sidebar ao clicar fora)
+            document.getElementById('sidebar-overlay')?.addEventListener('click', toggleSidebar);
+
 
             // Mapeamento dos IDs dos links da sidebar para os IDs das seções no HTML
             const linkToSectionMap = {
